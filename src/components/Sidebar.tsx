@@ -1,0 +1,71 @@
+'use client';
+import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const navItems = [
+  { href: '/', icon: <Home size={18} />, label: 'ראשי' },
+  { href: '/schedule', icon: <Calendar size={18} />, label: 'לו"ז' },
+  { href: '/lists', icon: <ClipboardList size={18} />, label: 'משימות' },
+  { href: '/logistics', icon: <Package size={18} />, label: 'לוגיסטיקה' },
+  { href: '/personnel', icon: <Users size={18} />, label: 'לוחמים' },
+  { href: '/media', icon: <ImageIcon size={18} />, label: 'מדיה' },
+  { href: '/staff', icon: <Shield size={18} />, label: 'סגל' },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+
+  // For mobile, we only show the 5 most important icons to avoid crowding
+  const mobileNavItems = [
+    { href: '/', icon: '🏠', label: 'ראשי' },
+    { href: '/schedule', icon: '📅', label: 'לו"ז' },
+    { href: '/lists', icon: '📋', label: 'משימות' },
+    { href: '/personnel', icon: '👥', label: 'לוחמים' },
+    { href: '/staff', icon: '👁️', label: 'סגל' },
+  ];
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <Shield size={32} className="logo-icon" color="var(--accent)" />
+          <h1>פלוגה 8170</h1>
+          <p>מערכת ניהול מילואים</p>
+        </div>
+        <nav className="sidebar-nav">
+          <p className="nav-section-title">ניווט ראשי</p>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`nav-item ${pathname === item.href ? 'active' : ''}`}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <p>פלוגה 8170 · מילואים</p>
+          <p style={{ marginTop: 4 }}>© 2026 כל הזכויות שמורות</p>
+        </div>
+      </aside>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="bottom-nav">
+        {mobileNavItems.map(item => (
+          <Link 
+            key={item.href} 
+            href={item.href} 
+            className={`bottom-nav-item ${pathname === item.href ? 'active' : ''}`}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </>
+  );
+}
