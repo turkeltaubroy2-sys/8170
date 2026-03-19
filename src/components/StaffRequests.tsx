@@ -38,7 +38,7 @@ export default function StaffRequests() {
       {requests.length === 0 ? (
         <p style={{ color: 'var(--text-muted)' }}>אין פניות פתוחות כרגע.</p>
       ) : (
-        <div className="table-wrapper">
+        <div className="table-container">
           <table>
             <thead>
               <tr>

@@ -81,7 +81,7 @@ export default function ListsPage() {
           <button className="btn btn-primary" onClick={() => setShowListModal(true)}>+ רשימה חדשה</button>
         </div>
         <div className="page-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }}>
+          <div className="lists-grid">
             {/* Lists sidebar */}
             <div>
               <h3 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12 }}>רשימות</h3>
@@ -135,10 +135,10 @@ export default function ListsPage() {
                   </div>
 
                   {/* Add item */}
-                  <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                    <input className="form-input" value={newItemText} onChange={e => setNewItemText(e.target.value)}
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+                    <input className="form-input" style={{ flex: 1, minWidth: '200px' }} value={newItemText} onChange={e => setNewItemText(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && addItem()} placeholder="פריט חדש (Enter להוספה)" />
-                    <input className="form-input" style={{ width: 160 }} value={newItemAssigned} onChange={e => setNewItemAssigned(e.target.value)} placeholder="אחראי" />
+                    <input className="form-input" style={{ flex: 0.5, minWidth: '100px' }} value={newItemAssigned} onChange={e => setNewItemAssigned(e.target.value)} placeholder="אחראי" />
                     <button className="btn btn-primary" onClick={addItem}>הוסף</button>
                   </div>
 

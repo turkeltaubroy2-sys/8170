@@ -196,7 +196,7 @@ export default function StaffPage() {
           {loading ? (
             <div className="loading-spinner"><div className="spinner" /></div>
           ) : view === 'table' ? (
-            <div className="table-wrapper">
+            <div className="table-container">
               <table>
                 <thead>
                   <tr>

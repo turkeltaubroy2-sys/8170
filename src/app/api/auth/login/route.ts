@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     // Role-based logic: Hardcoded admin
-    if (username === 'admin' && (password === 'admin' || password === 'admin123')) {
+    if (username === 'Admin' && (password === 'admin' || password === 'admin123')) {
       return NextResponse.json({ 
         success: true, 
         role: 'admin',
