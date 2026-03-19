@@ -43,7 +43,7 @@ export default function StaffPage() {
   const [filterStatus, setFilterStatus] = useState('');
   const [departments, setDepartments] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [search, setSearch] = useState('');
-  const [view, setView] = useState<'table' | 'cards'>('table');
+  const [view, setView] = useState<'table' | 'cards'>('cards');
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
 
