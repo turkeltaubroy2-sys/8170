@@ -15,8 +15,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'חסרים פרטי התחברות' }, { status: 400 });
     }
 
-    // Since we don't have built-in hashing yet for this simplified quick approach, we check plaintext.
-    // In production, passwords should be hashed (e.g., bcrypt)
+    // Role-based logic: Hardcoded admin
+    if (username === 'admin' && (password === 'admin' || password === 'admin123')) {
+      return NextResponse.json({ 
+        success: true, 
+        role: 'admin',
+        token: 'admin-token',
+        name: 'מנהל מערכת'
+      });
+    }
+
+    // Soldier login
     const { data, error } = await supabase
       .from('soldiers')
       .select('id, full_name, unique_token, password')
@@ -31,9 +40,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'סיסמה שגויה' }, { status: 401 });
     }
 
-    // Success - return the token
     return NextResponse.json({ 
       success: true, 
+      role: 'soldier',
       token: data.unique_token,
       name: data.full_name
     });

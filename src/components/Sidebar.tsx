@@ -25,6 +25,12 @@ export default function Sidebar() {
     { href: '/staff', icon: '👁️', label: 'סגל' },
   ];
 
+  const handleLogout = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    localStorage.removeItem('plugah_user');
+    window.location.href = '/login';
+  };
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -46,6 +52,10 @@ export default function Sidebar() {
               {item.label}
             </Link>
           ))}
+          <button onClick={handleLogout} className="nav-item" style={{ marginTop: 'auto', color: 'var(--danger)' }}>
+            <span className="nav-icon">🚪</span>
+            התנתק
+          </button>
         </nav>
         <div className="sidebar-footer">
           <p>פלוגה 8170 · מילואים</p>
@@ -65,6 +75,10 @@ export default function Sidebar() {
             <span>{item.label}</span>
           </Link>
         ))}
+        <button onClick={handleLogout} className="bottom-nav-item" style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
+          <span className="nav-icon">🚪</span>
+          <span>יציאה</span>
+        </button>
       </nav>
     </>
   );

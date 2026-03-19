@@ -95,7 +95,15 @@ export default function SoldierPortalPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'Heebo', direction: 'rtl', padding: '20px 16px' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <div style={{ position: 'relative', textAlign: 'center', marginBottom: 28 }}>
+          <button 
+            onClick={() => { localStorage.removeItem('plugah_user'); window.location.href = '/login'; }}
+            style={{ position: 'absolute', left: 0, top: 0, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, zIndex: 10 }}
+          >
+            <span style={{ fontSize: '1.2rem' }}>🚪</span>
+            <span style={{ fontSize: '0.8rem' }}>התנתק</span>
+          </button>
+          
           <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Shield size={18} /> פלוגה 8170</div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             {soldier?.photo_url ? (

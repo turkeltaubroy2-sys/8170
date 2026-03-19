@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Eye, EyeOff, LogIn } from 'lucide-react';
 
@@ -11,6 +11,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('plugah_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === 'admin') router.push('/');
+        else if (user.role === 'soldier' && user.token) router.push(`/soldier/${user.token}`);
+      } catch (e) {}
+    }
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +43,19 @@ export default function LoginPage() {
         throw new Error(data.error || 'התחברות נכשלה');
       }
 
-      // Success! Redirect to the soldier's unique portal
-      router.push(`/soldier/${data.token}`);
+      // Save to localStorage
+      localStorage.setItem('plugah_user', JSON.stringify({ 
+        role: data.role, 
+        token: data.token, 
+        name: data.name 
+      }));
+
+      // Redirect based on role
+      if (data.role === 'admin') {
+        router.push('/');
+      } else {
+        router.push(`/soldier/${data.token}`);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
