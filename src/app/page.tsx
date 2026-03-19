@@ -77,24 +77,13 @@ export default function Dashboard() {
 
         <div className="page-body">
           {/* Hero Banner */}
-          <div style={{
-            background: 'linear-gradient(135deg, var(--primary) 0%, #1a2f12 50%, var(--bg-card) 100%)',
-            border: '1px solid var(--border-light)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '28px 32px',
-            marginBottom: 28,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
+          <div className="hero-banner">
             <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', opacity: 0.04, backgroundImage: 'repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)', backgroundSize: '8px 8px' }} />
-            <div style={{ position: 'relative' }}>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--accent)' }}>ברוכים הבאים למערכת פלוגה 8170</h2>
-              <p style={{ color: 'var(--text-muted)', marginTop: 6 }}>מערכת ניהול לוגיסטית אינטגרטיבית למילואים</p>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--accent)', textShadow: 'var(--glow)' }}>ברוכים הבאים למערכת פלוגה 8170</h2>
+              <p style={{ color: 'var(--text)', marginTop: 8, fontSize: '1.05rem', fontWeight: 500 }}>מערכת ניהול לוגיסטית אינטגרטיבית למילואים</p>
             </div>
-            <div style={{ fontSize: '4rem', position: 'relative' }}>🎖️</div>
+            <div className="hero-icon" style={{ fontSize: '4rem', position: 'relative', zIndex: 1 }}>🎖️</div>
           </div>
 
           {/* Stats Grid */}

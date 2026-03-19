@@ -87,7 +87,7 @@ export default function StaffForms() {
         </form>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20 }}>
+      <div className="forms-grid">
         {/* Forms List */}
         <div>
           <h4 style={{ marginBottom: 12, color: 'var(--text-muted)' }}>שאלונים פעילים</h4>
