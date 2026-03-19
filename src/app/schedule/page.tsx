@@ -313,7 +313,6 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              {/* Commander - filtered by selected department */}
               <div className="form-group">
                 <label className="form-label">מפקד אירוע</label>
                 <select className="form-input" value={form.commander_id} onChange={e => setForm(f => ({ ...f, commander_id: e.target.value }))}>
