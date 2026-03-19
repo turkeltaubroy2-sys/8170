@@ -46,7 +46,7 @@ export default function RegisterPage() {
         throw new Error(data.error || 'אירעה שגיאה בהרשמה');
       }
 
-      // Store in localStorage for login (using unique_token if provided, or id)
+      // Store in localStorage for login
       if (data.soldier) {
         localStorage.setItem('soldier_token', data.soldier.unique_token || data.soldier.id);
         localStorage.setItem('soldier_id', data.soldier.id);
@@ -54,9 +54,11 @@ export default function RegisterPage() {
         if (data.soldier.department_id) {
           localStorage.setItem('department_id', data.soldier.department_id);
         }
+        // Redirect to the soldier portal with token
+        router.push(`/soldier/${data.soldier.unique_token}`);
+      } else {
+        router.push('/login');
       }
-
-      router.push('/soldier');
     } catch (err: any) {
       setError(err.message);
     } finally {

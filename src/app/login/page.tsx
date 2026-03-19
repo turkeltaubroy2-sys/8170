@@ -125,12 +125,26 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginBottom: 8 }}>
-            חייל חדש בפלוגה? <a href="/register" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>הירשם כאן</a>
-          </p>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-            במקרה של תקלה נא לפנות לחפ"ק קשר
+        <div style={{ marginTop: 24 }}>
+          <a
+            href="/register"
+            style={{
+              display: 'block',
+              textAlign: 'center',
+              padding: '12px',
+              borderRadius: 8,
+              background: 'rgba(255,255,255,0.06)',
+              border: '2px solid var(--accent)',
+              color: 'var(--accent)',
+              fontWeight: 700,
+              fontSize: '1rem',
+              textDecoration: 'none',
+            }}
+          >
+            חייל חדש בפלוגה? לחץ כאן להרשמה
+          </a>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', marginTop: 14 }}>
+            במקרה של תקלה נא לפנות לטורקל המלך
           </p>
         </div>
       </div>
