@@ -16,6 +16,7 @@ export default function PersonnelPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'cards' | 'passwords'>('cards');
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ full_name: '', rank: 'טוראי', role: '', phone: '', bio: '', department_id: '', photo_url: '' });
 
@@ -91,13 +92,55 @@ export default function PersonnelPage() {
     <div className="app-wrapper">
       <Sidebar />
       <main className="main-content">
-        <div className="page-header">
-          <h2>👥 אנשי הפלוגה</h2>
-          <button className="btn btn-primary" onClick={openNew}>+ הוסף חייל</button>
+        <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+            <h2>👥 אנשי הפלוגה</h2>
+            <button className="btn btn-primary" onClick={openNew}>+ הוסף חייל</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className={`btn btn-sm ${activeTab === 'cards' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('cards')}>
+              תצוגת כרטיסיות
+            </button>
+            <button className={`btn btn-sm ${activeTab === 'passwords' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setActiveTab('passwords')}>
+              ניהול סיסמאות
+            </button>
+          </div>
         </div>
         <div className="page-body">
           {loading ? (
             <div className="loading-spinner"><div className="spinner" /></div>
+          ) : activeTab === 'passwords' ? (
+            <div className="card" style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>שם קריאה / שם מלא</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>מחלקה</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>מספר אישי (מ.א)</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600 }}>סיסמה</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {soldiers.map(s => (
+                    <tr key={s.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                      <td style={{ padding: '12px 16px' }}>{s.full_name} <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>({s.rank})</span></td>
+                      <td style={{ padding: '12px 16px', color: 'var(--text-muted)' }}>{s.departments?.name || 'ללא מחלקה'}</td>
+                      <td style={{ padding: '12px 16px', fontWeight: 500 }}>
+                        {s.personal_number ? s.personal_number : <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>לא נרשם עדין</span>}
+                      </td>
+                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--primary)' }}>
+                        {s.password ? s.password : <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem', fontFamily: 'Heebo' }}>-</span>}
+                      </td>
+                    </tr>
+                  ))}
+                  {soldiers.length === 0 && (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>אין חיילים במערכת</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <>
               {grouped.map(({ dep, soldiers: depSoldiers }) => depSoldiers.length > 0 && (

@@ -83,13 +83,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label className="form-label" style={{ color: 'var(--text-muted)' }}>מספר אישי או שם משתמש</label>
+            <label className="form-label" style={{ color: 'var(--text-muted)' }}>מספר אישי (מ.א) / שם משתמש</label>
             <input 
               type="text" 
               className="form-input" 
               value={username} 
               onChange={e => setUsername(e.target.value)} 
-              placeholder="הזן שם משתמש"
+              placeholder="הזן מספר אישי"
               required 
               style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}
             />
@@ -125,9 +125,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 24 }}>
-          במקרה של תקלה נא לפנות לטורקל המלך 👑
-        </p>
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginBottom: 8 }}>
+            חייל חדש בפלוגה? <a href="/register" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>הירשם כאן</a>
+          </p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+            במקרה של תקלה נא לפנות לחפ"ק קשר
+          </p>
+        </div>
       </div>
     </div>
   );

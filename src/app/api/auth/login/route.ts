@@ -26,14 +26,27 @@ export async function POST(request: Request) {
     }
 
     // Soldier login
-    const { data, error } = await supabase
+    // Try by personal_number first, fallback to username for legacy
+    const { data: byPersonal } = await supabase
       .from('soldiers')
-      .select('id, full_name, unique_token, password')
-      .eq('username', username)
+      .select('id, full_name, unique_token, password, department_id')
+      .eq('personal_number', username)
       .single();
-
-    if (error || !data) {
-      return NextResponse.json({ error: 'שם משתמש לא קיים' }, { status: 401 });
+      
+    let data;
+    if (byPersonal) {
+      data = byPersonal;
+    } else {
+      const { data: byUser, error } = await supabase
+        .from('soldiers')
+        .select('id, full_name, unique_token, password, department_id')
+        .eq('username', username)
+        .single();
+      
+      if (error || !byUser) {
+        return NextResponse.json({ error: 'מספר אישי או שם משתמש לא קיים' }, { status: 401 });
+      }
+      data = byUser;
     }
 
     if (data.password !== password) {

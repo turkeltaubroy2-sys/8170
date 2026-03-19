@@ -23,6 +23,8 @@ export type Soldier = {
   photo_url: string;
   unique_token: string;
   pakalim: string[];
+  personal_number?: string;
+  password?: string;
   created_at: string;
   departments?: Department;
 };
@@ -133,4 +135,15 @@ export type FormResponse = {
   response_data: Record<string, string | string[]>;
   created_at: string;
   soldiers?: Pick<Soldier, 'full_name' | 'departments'>;
+};
+
+export type Message = {
+  id: string;
+  title: string;
+  content: string;
+  target_department_id: string | null;
+  created_by: string;
+  created_at: string;
+  departments?: Pick<Department, 'name'>;
+  soldiers?: Pick<Soldier, 'full_name'>;
 };

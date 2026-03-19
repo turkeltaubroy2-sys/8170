@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase, Soldier, SoldierPortal, Schedule } from '@/lib/supabase';
-import { MapPin, Stethoscope, Backpack, FileText, CheckCircle, Shield, AlertTriangle, Send } from 'lucide-react';
+import { MapPin, Stethoscope, Backpack, FileText, CheckCircle, Shield, AlertTriangle, Send, Bell } from 'lucide-react';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
 
@@ -20,8 +20,9 @@ export default function SoldierPortalPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'messages'>('status');
   const [guardEvents, setGuardEvents] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [form, setForm] = useState({
     status: 'בבית',
     health_declaration: 'תקין',
@@ -58,6 +59,13 @@ export default function SoldierPortalPage() {
       .eq('status', 'published')
       .order('created_at', { ascending: false });
     if (eventsData) setGuardEvents(eventsData);
+
+    // Fetch messages targeted to all or this soldier's department
+    const { data: messagesData } = await supabase.from('messages')
+      .select('*')
+      .or(`target_department_id.eq.${soldierData.department_id},target_department_id.is.null`)
+      .order('created_at', { ascending: false });
+    if (messagesData) setMessages(messagesData);
 
     const { data: portalData } = await supabase.from('soldier_portals').select('*').eq('soldier_id', soldierData.id).single();
 
@@ -173,6 +181,17 @@ export default function SoldierPortalPage() {
           >
             <Shield size={16} /> שמירות
           </button>
+          <button 
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'messages' ? 600 : 400, color: activeTab === 'messages' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'messages' ? '3px solid var(--accent)' : '3px solid transparent', position: 'relative' }}
+            onClick={() => setActiveTab('messages')}
+          >
+            <Bell size={16} /> הודעות
+            {messages.length > 0 && (
+              <span style={{ position: 'absolute', top: -3, right: -10, background: 'var(--danger)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: 10 }}>
+                {messages.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {saved && activeTab === 'status' && (
@@ -181,6 +200,31 @@ export default function SoldierPortalPage() {
 
         {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} />}
         {activeTab === 'forms' && soldier && <SoldierForms soldierId={soldier.id} />}
+
+        {activeTab === 'messages' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {messages.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+                <Bell size={40} style={{ margin: '0 auto 12px', color: 'var(--text-muted)' }} />
+                <p style={{ color: 'var(--text-muted)' }}>אין הודעות חדשות מהסגל.</p>
+              </div>
+            ) : messages.map(msg => (
+              <div key={msg.id} className="card" style={{ padding: 20, borderLeft: '4px solid var(--accent)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>{msg.title}</h3>
+                </div>
+                
+                <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 8, marginTop: 4 }}>
+                  <p style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{msg.content}</p>
+                </div>
+                
+                <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginTop: 12, textAlign: 'left' }}>
+                  {new Date(msg.created_at).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {activeTab === 'guard' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
