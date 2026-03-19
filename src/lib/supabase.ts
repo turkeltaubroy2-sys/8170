@@ -49,6 +49,11 @@ export type Schedule = {
   color: string;
   created_by: string;
   created_at: string;
+  department_id?: string;
+  commander_id?: string;
+  status?: string;
+  departments?: Pick<Department, 'name' | 'icon'>;
+  soldiers?: Pick<Soldier, 'full_name'>;
 };
 
 export type TaskList = {

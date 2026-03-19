@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { supabase, Soldier, SoldierPortal } from '@/lib/supabase';
+import { supabase, Soldier, SoldierPortal, Schedule } from '@/lib/supabase';
 import { MapPin, Stethoscope, Backpack, FileText, CheckCircle, Shield, AlertTriangle, Send } from 'lucide-react';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
@@ -15,11 +15,13 @@ export default function SoldierPortalPage() {
   const token = params.token as string;
   const [soldier, setSoldier] = useState<Soldier | null>(null);
   const [portal, setPortal] = useState<SoldierPortal | null>(null);
+  const [missions, setMissions] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard'>('status');
+  const [guardEvents, setGuardEvents] = useState<any[]>([]);
   const [form, setForm] = useState({
     status: 'בבית',
     health_declaration: 'תקין',
@@ -40,6 +42,22 @@ export default function SoldierPortalPage() {
 
     if (!soldierData) { setNotFound(true); setLoading(false); return; }
     setSoldier(soldierData);
+
+    const { data: missionsData } = await supabase.from('schedules')
+      .select('*')
+      .eq('commander_id', soldierData.id)
+      .neq('status', 'completed')
+      .order('start_time', { ascending: true });
+    
+    if (missionsData) {
+      setMissions(missionsData);
+    }
+
+    const { data: eventsData } = await supabase.from('guard_events')
+      .select('*, guard_shifts(*)')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+    if (eventsData) setGuardEvents(eventsData);
 
     const { data: portalData } = await supabase.from('soldier_portals').select('*').eq('soldier_id', soldierData.id).single();
 
@@ -149,6 +167,12 @@ export default function SoldierPortalPage() {
           >
             <FileText size={16} /> שאלונים
           </button>
+          <button 
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'guard' ? 600 : 400, color: activeTab === 'guard' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'guard' ? '3px solid var(--accent)' : '3px solid transparent' }}
+            onClick={() => setActiveTab('guard')}
+          >
+            <Shield size={16} /> שמירות
+          </button>
         </div>
 
         {saved && activeTab === 'status' && (
@@ -157,9 +181,112 @@ export default function SoldierPortalPage() {
 
         {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} />}
         {activeTab === 'forms' && soldier && <SoldierForms soldierId={soldier.id} />}
+
+        {activeTab === 'guard' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {guardEvents.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+                <Shield size={40} style={{ margin: '0 auto 12px', color: 'var(--text-muted)' }} />
+                <p style={{ color: 'var(--text-muted)' }}>אין רשימות שמירה פתוחות כרגע.</p>
+              </div>
+            ) : guardEvents.map(ev => {
+              const shifts = [...(ev.guard_shifts || [])].sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+              
+              return (
+                <div key={ev.id} className="card">
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 6 }}>📍 {ev.location}</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                    מ- {new Date(ev.start_time).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })} {new Date(ev.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {shifts.map(shift => {
+                      const isMe = shift.soldier_id === soldier?.id;
+                      const isTaken = !!shift.soldier_id && !isMe;
+                      const isOpen = !shift.soldier_id;
+                      
+                      return (
+                        <div key={shift.id} style={{ 
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                          padding: '10px 14px', borderRadius: 8,
+                          background: isMe ? 'rgba(39, 174, 96, 0.1)' : isOpen ? 'var(--bg-surface)' : 'rgba(0,0,0,0.2)',
+                          border: isMe ? '1px solid #27ae60' : '1px solid transparent'
+                        }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isTaken ? 'var(--text-muted)' : 'var(--text)' }}>
+                            {new Date(shift.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {new Date(shift.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          
+                          {isMe ? (
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#27ae60' }}>🛡️ המשמרת שלך</span>
+                          ) : isTaken ? (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>נתפס</span>
+                          ) : (
+                            <button 
+                              className="btn btn-primary btn-sm"
+                              disabled={saving}
+                              onClick={async () => {
+                                if (!confirm('האם אתה בטוח שברצונך להשתבץ למשמרת זו? לא ניתן לבטל אחרי השיבוץ.')) return;
+                                setSaving(true);
+                                await supabase.from('guard_shifts').update({ soldier_id: soldier?.id }).eq('id', shift.id);
+                                
+                                setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
+                                  ...e, 
+                                  guard_shifts: e.guard_shifts.map((s: any) => s.id === shift.id ? { ...s, soldier_id: soldier?.id } : s)
+                                } : e));
+                                setSaving(false);
+                              }}
+                            >
+                              שבץ אותי
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         
         {activeTab === 'status' && (
           <>
+            {/* Missions */}
+            {missions.length > 0 && (
+              <div className="card" style={{ marginBottom: 16, border: '2px solid var(--accent)' }}>
+                <h3 style={{ fontWeight: 700, marginBottom: 12, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Shield size={18} /> משימות בפיקודך
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {missions.map(m => (
+                    <div key={m.id} style={{ background: 'var(--bg-surface)', padding: 12, borderRadius: 8 }}>
+                      <h4 style={{ fontWeight: 700 }}>{m.title}</h4>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+                        🕐 {new Date(m.start_time).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' })}  
+                        {m.end_time ? ` עד ${new Date(m.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                        {m.location ? ` | 📍 ${m.location}` : ''}
+                      </div>
+                      {m.description && <p style={{ fontSize: '0.85rem', marginBottom: 12 }}>{m.description}</p>}
+                      <button 
+                        className="btn btn-primary btn-sm" 
+                        style={{ width: '100%' }}
+                        disabled={saving}
+                        onClick={async () => {
+                          if (!confirm('האם אתה בטוח שהמשימה הושלמה?')) return;
+                          setSaving(true);
+                          await supabase.from('schedules').update({ status: 'completed' }).eq('id', m.id);
+                          setMissions(prev => prev.filter(miss => miss.id !== m.id));
+                          setSaving(false);
+                        }}
+                      >
+                        ✅ סמן כהושלם
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Status */}
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>

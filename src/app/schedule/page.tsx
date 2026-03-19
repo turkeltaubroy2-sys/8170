@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { supabase, Schedule } from '@/lib/supabase';
+import { supabase, Schedule, Department, Soldier } from '@/lib/supabase';
 
 const COLOR_OPTIONS = [
   { label: 'ירוק', value: '#4A6741' },
@@ -25,15 +25,30 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editEvent, setEditEvent] = useState<Schedule | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [soldiers, setSoldiers] = useState<Pick<Soldier, 'id' | 'full_name' | 'department_id'>[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', start_time: '', end_time: '', location: '', color: '#4A6741', all_day: false,
+    department_id: '', commander_id: ''
   });
 
-  useEffect(() => { fetchEvents(); }, []);
+  useEffect(() => { 
+    fetchEvents(); 
+    fetchMetadata();
+  }, []);
+
+  const fetchMetadata = async () => {
+    const [deps, sols] = await Promise.all([
+      supabase.from('departments').select('id, name, icon, order').order('order'),
+      supabase.from('soldiers').select('id, full_name, department_id').order('full_name')
+    ]);
+    if (deps.data) setDepartments(deps.data);
+    if (sols.data) setSoldiers(sols.data);
+  };
 
   const fetchEvents = async () => {
-    const { data } = await supabase.from('schedules').select('*').order('start_time', { ascending: true });
+    const { data } = await supabase.from('schedules').select('*, departments(name, icon), soldiers(full_name)').order('start_time', { ascending: true });
     setEvents(data || []);
     setLoading(false);
   };
@@ -42,7 +57,7 @@ export default function SchedulePage() {
     setEditEvent(null);
     const now = new Date();
     now.setMinutes(0, 0, 0);
-    setForm({ title: '', description: '', start_time: now.toISOString().slice(0,16), end_time: '', location: '', color: '#4A6741', all_day: false });
+    setForm({ title: '', description: '', start_time: now.toISOString().slice(0,16), end_time: '', location: '', color: '#4A6741', all_day: false, department_id: '', commander_id: '' });
     setShowModal(true);
   };
 
@@ -51,6 +66,7 @@ export default function SchedulePage() {
     setForm({
       title: ev.title, description: ev.description || '', start_time: ev.start_time?.slice(0,16) || '',
       end_time: ev.end_time?.slice(0,16) || '', location: ev.location || '', color: ev.color || '#4A6741', all_day: ev.all_day,
+      department_id: ev.department_id || '', commander_id: ev.commander_id || ''
     });
     setShowModal(true);
   };
@@ -58,7 +74,13 @@ export default function SchedulePage() {
   const save = async () => {
     if (!form.title || !form.start_time) return;
     setSaving(true);
-    const payload = { ...form, start_time: new Date(form.start_time).toISOString(), end_time: form.end_time ? new Date(form.end_time).toISOString() : null };
+    const payload = { 
+      ...form, 
+      start_time: new Date(form.start_time).toISOString(), 
+      end_time: form.end_time ? new Date(form.end_time).toISOString() : null,
+      department_id: form.department_id || null,
+      commander_id: form.commander_id || null,
+    };
     if (editEvent) {
       await supabase.from('schedules').update(payload).eq('id', editEvent.id);
     } else {
@@ -114,10 +136,17 @@ export default function SchedulePage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                           <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>{ev.title}</h4>
                           {ev.all_day && <span className="badge badge-green">כל היום</span>}
+                          {ev.status === 'completed' && <span className="badge badge-gray" style={{ background: '#27ae6022', color: '#27ae60', border: '1px solid currentColor' }}>✓ הושלמה</span>}
                         </div>
                         <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>🕐 {formatDate(ev.start_time)}{ev.end_time ? ` — ${formatDate(ev.end_time)}` : ''}</p>
-                        {ev.location && <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 2 }}>📍 {ev.location}</p>}
-                        {ev.description && <p style={{ fontSize: '0.85rem', marginTop: 6, color: 'var(--text)' }}>{ev.description}</p>}
+                        
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
+                          {ev.location && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>📍 {ev.location}</span>}
+                          {ev.departments && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{ev.departments.icon} {ev.departments.name}</span>}
+                          {ev.soldiers && <span style={{ fontSize: '0.82rem', color: 'var(--primary)', fontWeight: 600 }}>🪖 חפ"ק / מפקד: {ev.soldiers.full_name}</span>}
+                        </div>
+
+                        {ev.description && <p style={{ fontSize: '0.85rem', marginTop: 10, color: 'var(--text)' }}>{ev.description}</p>}
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-secondary btn-sm" onClick={() => openEdit(ev)}>✏️</button>
@@ -156,9 +185,27 @@ export default function SchedulePage() {
                   <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
                 </div>
               </div>
+              <div className="card-grid card-grid-2" style={{ marginBottom: 12 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">מחלקה משויכת</label>
+                  <select className="form-input" value={form.department_id} onChange={e => setForm(f => ({ ...f, department_id: e.target.value, commander_id: '' }))}>
+                    <option value="">כללי (ללא מחלקה)</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.icon} {d.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">מפקד אירוע</label>
+                  <select className="form-input" value={form.commander_id} onChange={e => setForm(f => ({ ...f, commander_id: e.target.value }))}>
+                    <option value="">בחר חייל לפקוד על המשימה...</option>
+                    {soldiers.filter(s => !form.department_id || s.department_id === form.department_id).map(s => (
+                      <option key={s.id} value={s.id}>{s.full_name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="form-group">
                 <label className="form-label">מיקום</label>
-                <input className="form-input" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="כתובת / מיקום" />
+                <input className="form-input" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="כתובת / עמדה / מיקום" />
               </div>
               <div className="form-group">
                 <label className="form-label">צבע</label>

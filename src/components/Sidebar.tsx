@@ -1,5 +1,5 @@
 'use client';
-import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon } from 'lucide-react';
+import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', icon: <Home size={18} />, label: 'ראשי' },
   { href: '/schedule', icon: <Calendar size={18} />, label: 'לו"ז' },
   { href: '/lists', icon: <ClipboardList size={18} />, label: 'משימות' },
+  { href: '/guard-duty', icon: <Clock size={18} />, label: 'שמירות' },
   { href: '/logistics', icon: <Package size={18} />, label: 'לוגיסטיקה' },
   { href: '/personnel', icon: <Users size={18} />, label: 'לוחמים' },
   { href: '/media', icon: <ImageIcon size={18} />, label: 'מדיה' },
@@ -20,7 +21,7 @@ export default function Sidebar() {
   const mobileNavItems = [
     { href: '/', icon: '🏠', label: 'ראשי' },
     { href: '/schedule', icon: '📅', label: 'לו"ז' },
-    { href: '/lists', icon: '📋', label: 'משימות' },
+    { href: '/guard-duty', icon: '🛡️', label: 'שמירות' },
     { href: '/personnel', icon: '👥', label: 'לוחמים' },
     { href: '/staff', icon: '👁️', label: 'סגל' },
   ];
