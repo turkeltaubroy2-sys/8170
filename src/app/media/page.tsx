@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import Sidebar from '@/components/Sidebar';
 import { supabase, MediaItem } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,13 +16,18 @@ export default function MediaPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  useEffect(() => { fetchMedia(); }, []);
-
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     const { data } = await supabase.from('media').select('*').order('created_at', { ascending: false });
     setItems(data || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchMedia();
+    };
+    load();
+  }, [fetchMedia]);
 
   const uploadFiles = async (files: FileList | File[]) => {
     setUploading(true);
@@ -113,7 +119,17 @@ export default function MediaPage() {
                   {item.file_type === 'video' ? (
                     <video src={item.file_url} controls style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover' }} />
                   ) : (
-                    <img src={item.file_url} alt={item.title || ''} onClick={() => setLightbox(item.file_url)} style={{ cursor: 'pointer' }} />
+                   <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                      <Image 
+                        src={item.file_url} 
+                        alt={item.title || ''} 
+                        fill
+                        className="object-cover"
+                        onClick={() => setLightbox(item.file_url)} 
+                        style={{ cursor: 'pointer' }}
+                        unoptimized
+                      />
+                    </div>
                   )}
                   <div className="media-card-info">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -134,7 +150,14 @@ export default function MediaPage() {
         {lightbox && (
           <div className="modal-overlay" onClick={() => setLightbox(null)} style={{ padding: 20 }}>
             <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
-              <img src={lightbox} alt="" style={{ maxWidth: '100%', maxHeight: '85vh', objectFit: 'contain', borderRadius: 12 }} />
+              <Image 
+                src={lightbox} 
+                alt="" 
+                width={1200}
+                height={800}
+                style={{ maxWidth: '100%', maxHeight: '85vh', objectFit: 'contain', borderRadius: 12 }} 
+                unoptimized
+              />
               <button className="btn btn-secondary" onClick={() => setLightbox(null)} style={{ position: 'absolute', top: -16, left: -16 }}>✕</button>
             </div>
           </div>

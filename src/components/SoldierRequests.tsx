@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { SoldierRequest } from '@/lib/supabase';
 import { Send, FileCheck } from 'lucide-react';
@@ -12,11 +12,7 @@ export default function SoldierRequests({ soldierId }: { soldierId: string }) {
   const [desc, setDesc] = useState('');
   const [type, setType] = useState('ציוד');
 
-  useEffect(() => {
-    fetchMyRequests();
-  }, [soldierId]);
-
-  const fetchMyRequests = async () => {
+  const fetchMyRequests = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from('requests')
@@ -25,7 +21,14 @@ export default function SoldierRequests({ soldierId }: { soldierId: string }) {
       .order('created_at', { ascending: false });
     setRequests(data || []);
     setLoading(false);
-  };
+  }, [soldierId]);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchMyRequests();
+    };
+    load();
+  }, [fetchMyRequests]);
 
   const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();

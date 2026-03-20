@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Eye, EyeOff, LogIn } from 'lucide-react';
 import Link from 'next/link';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -20,7 +22,9 @@ export default function LoginPage() {
         const user = JSON.parse(userStr);
         if (user.role === 'admin') router.push('/');
         else if (user.role === 'soldier' && user.token) router.push(`/soldier/${user.token}`);
-      } catch (e) {}
+      } catch {
+        // Ignored
+      }
     }
   }, [router]);
 
@@ -57,8 +61,9 @@ export default function LoginPage() {
       } else {
         router.push(`/soldier/${data.token}`);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError('שגיאה לא ידועה');
     } finally {
       setLoading(false);
     }
@@ -83,24 +88,20 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleLogin}>
-          <div className="form-group">
-            <label className="form-label" style={{ color: 'var(--text-muted)' }}>מספר אישי (מ.א) / שם משתמש</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              value={username} 
-              onChange={e => setUsername(e.target.value)} 
-              placeholder="הזן מספר אישי"
-              required 
-              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}
-            />
-          </div>
+          <Input 
+            label="מספר אישי (מ.א) / שם משתמש"
+            type="text" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)} 
+            placeholder="הזן מספר אישי"
+            required 
+            style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}
+          />
           
-          <div className="form-group" style={{ position: 'relative' }}>
-            <label className="form-label" style={{ color: 'var(--text-muted)' }}>סיסמה</label>
-            <input 
+          <div style={{ position: 'relative' }}>
+            <Input 
+              label="סיסמה"
               type={showPassword ? 'text' : 'password'} 
-              className="form-input" 
               value={password} 
               onChange={e => setPassword(e.target.value)} 
               placeholder="הזן סיסמה"
@@ -116,14 +117,13 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <button 
+          <Button 
             type="submit" 
-            className="btn btn-primary" 
-            disabled={loading} 
             style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px 20px', fontSize: '1rem', fontWeight: 600 }}
+            loading={loading}
           >
-            {loading ? <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> : <><LogIn size={18} /> התחבר</>}
-          </button>
+            <LogIn size={18} /> התחבר
+          </Button>
         </form>
 
         <div style={{ marginTop: 24 }}>

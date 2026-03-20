@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -59,8 +61,8 @@ export default function RegisterPage() {
       } else {
         router.push('/login');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'אירעה שגיאה בהרשמה');
     } finally {
       setLoading(false);
     }
@@ -77,65 +79,49 @@ export default function RegisterPage() {
         {error && <div className="login-error">{error}</div>}
 
         <form onSubmit={handleRegister}>
-          <div className="form-group">
-            <label className="form-label">
-              מספר אישי (מ.א)
-            </label>
-            <input
-              type="number"
-              className="form-input"
-              value={personalNumber}
-              onChange={(e) => setPersonalNumber(e.target.value)}
-              placeholder="לדוגמה: 8857288"
-              required
-              disabled={loading}
-              autoComplete="username"
-              style={{ textAlign: 'left' }}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              בחר סיסמה
-            </label>
-            <input
-              type="password"
-              className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="בחר סיסמה מאובטחת"
-              required
-              disabled={loading}
-              autoComplete="new-password"
-              style={{ textAlign: 'left' }}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              אימות סיסמה
-            </label>
-            <input
-              type="password"
-              className="form-input"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="הקלד את הסיסמה שנית"
-              required
-              disabled={loading}
-              autoComplete="new-password"
-              style={{ textAlign: 'left' }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', marginTop: '12px', fontSize: '1.1rem', padding: '12px' }}
+          <Input
+            label="מספר אישי (מ.א)"
+            type="number"
+            value={personalNumber}
+            onChange={(e) => setPersonalNumber(e.target.value)}
+            placeholder="לדוגמה: 8857288"
+            required
             disabled={loading}
+            autoComplete="username"
+            style={{ textAlign: 'left' }}
+          />
+
+          <Input
+            label="בחר סיסמה"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="בחר סיסמה מאובטחת"
+            required
+            disabled={loading}
+            autoComplete="new-password"
+            style={{ textAlign: 'left' }}
+          />
+
+          <Input
+            label="אימות סיסמה"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="הקלד את הסיסמה שנית"
+            required
+            disabled={loading}
+            autoComplete="new-password"
+            style={{ textAlign: 'left' }}
+          />
+
+          <Button
+            type="submit"
+            style={{ width: '100%', marginTop: '12px', fontSize: '1.1rem', padding: '12px' }}
+            loading={loading}
           >
-            {loading ? 'מתחבר למאגר...' : 'הירשם למערכת'}
-          </button>
+            הירשם למערכת
+          </Button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>

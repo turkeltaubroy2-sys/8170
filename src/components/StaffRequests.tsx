@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { SoldierRequest } from '@/lib/supabase';
 
@@ -8,11 +8,7 @@ export default function StaffRequests() {
   const [requests, setRequests] = useState<SoldierRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from('requests')
@@ -21,7 +17,14 @@ export default function StaffRequests() {
     
     setRequests(data || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchRequests();
+    };
+    load();
+  }, [fetchRequests]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('requests').update({ status }).eq('id', id);
@@ -57,7 +60,6 @@ export default function StaffRequests() {
                   <td>
                     <strong>{r.soldiers?.full_name}</strong>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {/* @ts-ignore - Supabase nested join types */}
                       {r.soldiers?.departments?.icon} {r.soldiers?.departments?.name}
                     </div>
                   </td>

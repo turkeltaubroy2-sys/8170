@@ -169,11 +169,12 @@ export async function GET() {
       return NextResponse.json({
         success: true,
         message: 'Database schema applied successfully!',
-        tables: result.rows.map((r: any) => r.tablename),
+        tables: result.rows.map((r: { tablename: string }) => r.tablename),
         connectionUsed: `${config.host}:${config.port}`,
       });
-    } catch (err: any) {
-      errors.push(`${config.host}:${config.port} — ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      errors.push(`${config.host}:${config.port} — ${message}`);
       try { await client.end(); } catch {}
     }
   }

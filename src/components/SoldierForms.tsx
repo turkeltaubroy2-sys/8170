@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { FormType, FormResponse } from '@/lib/supabase';
 import { ClipboardList, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -11,9 +11,7 @@ export default function SoldierForms({ soldierId }: { soldierId: string }) {
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  useEffect(() => { fetchForms(); }, [soldierId]);
-
-  const fetchForms = async () => {
+  const fetchForms = useCallback(async () => {
     setLoading(true);
     // Fetch active forms
     const { data: fData } = await supabase.from('forms').select('*').eq('active', true).order('created_at', { ascending: false });
@@ -23,7 +21,14 @@ export default function SoldierForms({ soldierId }: { soldierId: string }) {
     setForms(fData || []);
     setResponses(rData || []);
     setLoading(false);
-  };
+  }, [soldierId]);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchForms();
+    };
+    load();
+  }, [fetchForms]);
 
   const submitResponse = async (formId: string, e: React.FormEvent) => {
     e.preventDefault();

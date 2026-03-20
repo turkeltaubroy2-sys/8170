@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase, Department, Message } from '@/lib/supabase';
 
@@ -13,26 +13,29 @@ export default function MessagesPage() {
   
   const [form, setForm] = useState({ title: '', content: '', target_department_id: '' });
 
-  useEffect(() => {
-    fetchMetadata();
-    fetchMessages();
-  }, []);
-
-  const fetchMetadata = async () => {
+  const fetchMetadata = useCallback(async () => {
     const { data } = await supabase.from('departments').select('*').order('order');
     if (data) setDepartments(data);
-  };
+  }, []);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('messages')
       .select('*, departments(name), soldiers(full_name)')
       .order('created_at', { ascending: false });
     
     if (data) setMessages(data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchMetadata();
+      await fetchMessages();
+    };
+    load();
+  }, [fetchMetadata, fetchMessages]);
 
   const openNew = () => {
     setForm({ title: '', content: '', target_department_id: '' });
@@ -43,9 +46,8 @@ export default function MessagesPage() {
     if (!form.title || !form.content) return;
     setSaving(true);
     
-    // Get current admin user ID purely for aesthetic reasons (created_by is optional or could be taken from auth if we had real auth)
-    const adminStr = localStorage.getItem('soldier_id');
-    const createdBy = adminStr || null;
+    // Get current admin user ID purely for aesthetic reasons (created_by is optional)
+    localStorage.getItem('soldier_id');
 
     const payload = {
       title: form.title,

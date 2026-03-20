@@ -147,3 +147,23 @@ export type Message = {
   departments?: Pick<Department, 'name'>;
   soldiers?: Pick<Soldier, 'full_name'>;
 };
+
+export type GuardEvent = {
+  id: string;
+  location: string;
+  start_time: string;
+  end_time: string;
+  status: 'draft' | 'published' | 'completed';
+  created_at: string;
+  guard_shifts?: GuardShift[];
+};
+
+export type GuardShift = {
+  id: string;
+  event_id: string;
+  soldier_id: string | null;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+  soldiers?: Pick<Soldier, 'full_name'>;
+};

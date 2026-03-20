@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { FormType, FormResponse } from '@/lib/supabase';
 
@@ -17,11 +17,7 @@ export default function StaffForms() {
   // Basic support for one text question and one select question for MVP
   const [q1, setQ1] = useState('הצהרת בריאות יומית למילואים');
 
-  useEffect(() => {
-    fetchForms();
-  }, []);
-
-  const fetchForms = async () => {
+  const fetchForms = useCallback(async () => {
     setLoading(true);
     const { data: fData } = await supabase.from('forms').select('*').order('created_at', { ascending: false });
     const { data: rData } = await supabase.from('form_responses').select('*, soldiers(full_name, departments(name))').order('created_at', { ascending: false });
@@ -29,7 +25,14 @@ export default function StaffForms() {
     setForms(fData || []);
     setResponses(rData || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchForms();
+    };
+    load();
+  }, [fetchForms]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +139,6 @@ export default function StaffForms() {
                         <td>
                           <strong>{r.soldiers?.full_name}</strong>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {/* @ts-ignore */}
                             {r.soldiers?.departments?.name}
                           </div>
                         </td>

@@ -1,0 +1,507 @@
+﻿
+> plugah-8170@0.1.0 lint
+> eslint
+
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\api\auth\login\route.ts
+  63:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\api\auth\register\route.ts
+  33:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\api\setup\route.ts
+  172:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\guard-duty\page.tsx
+  38:5  error  Error: Cannot access variable before it is declared
+
+`fetchData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\guard-duty\page.tsx:38:5
+  36 |
+  37 |   useEffect(() => {
+> 38 |     fetchData();
+     |     ^^^^^^^^^ `fetchData` accessed before it is declared
+  39 |   }, []);
+  40 |
+  41 |   const fetchData = async () => {
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\guard-duty\page.tsx:41:3
+  39 |   }, []);
+  40 |
+> 41 |   const fetchData = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |     const [evs, sols] = await Promise.all([
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |       supabase.from('guard_events').select('*, guard_shifts(*, soldiers(full_name))').order('created_at', { ascending: false }),
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 44 |       supabase.from('soldiers').select('id, full_name').order('full_name')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |     ]);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 46 |     if (evs.data) setEvents(evs.data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 47 |     if (sols.data) setSoldiers(sols.data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 48 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 49 |   };
+     | ^^^^^ `fetchData` is declared here
+  50 |
+  51 |   const publishEvent = async () => {
+  52 |     if (!form.location || !form.start_time || !form.end_time || !form.shift_duration) return;  react-hooks/immutability
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\layout.tsx
+  21:9  warning  Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\lists\page.tsx
+  23:21  error  Error: Cannot access variable before it is declared
+
+`fetchLists` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\lists\page.tsx:23:21
+  21 |   const [saving, setSaving] = useState(false);
+  22 |
+> 23 |   useEffect(() => { fetchLists(); }, []);
+     |                     ^^^^^^^^^^ `fetchLists` accessed before it is declared
+  24 |
+  25 |   const fetchLists = async () => {
+  26 |     const { data } = await supabase.from('lists').select('*').order('created_at', { ascending: false });
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\lists\page.tsx:25:3
+  23 |   useEffect(() => { fetchLists(); }, []);
+  24 |
+> 25 |   const fetchLists = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |     const { data } = await supabase.from('lists').select('*').order('created_at', { ascending: false });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     setLists(data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |   };
+     | ^^^^^ `fetchLists` is declared here
+  30 |
+  31 |   const fetchItems = async (listId: string) => {
+  32 |     const { data } = await supabase.from('list_items').select('*').eq('list_id', listId).order('created_at', { ascending: true });  react-hooks/immutability
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\login\page.tsx
+  25:16  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  62:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\logistics\page.tsx
+  27:21  error  Error: Cannot access variable before it is declared
+
+`fetchItems` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\logistics\page.tsx:27:21
+  25 |   const [form, setForm] = useState({ title: '', category: '╫¢╫£╫£╫Ö', quantity: 1, unit: '╫Ö╫ù╫Ö╫ô╫ö', status: '╫û╫₧╫Ö╫ƒ', notes: '', assigned_to: '' });
+  26 |
+> 27 |   useEffect(() => { fetchItems(); }, []);
+     |                     ^^^^^^^^^^ `fetchItems` accessed before it is declared
+  28 |
+  29 |   const fetchItems = async () => {
+  30 |     const { data } = await supabase.from('logistics').select('*').order('created_at', { ascending: false });
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\logistics\page.tsx:29:3
+  27 |   useEffect(() => { fetchItems(); }, []);
+  28 |
+> 29 |   const fetchItems = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |     const { data } = await supabase.from('logistics').select('*').order('created_at', { ascending: false });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |     setItems(data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |   };
+     | ^^^^^ `fetchItems` is declared here
+  34 |
+  35 |   const openNew = () => {
+  36 |     setEditItem(null);  react-hooks/immutability
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\media\page.tsx
+   18:21  error    Error: Cannot access variable before it is declared
+
+`fetchMedia` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\media\page.tsx:18:21
+  16 |   const [dragOver, setDragOver] = useState(false);
+  17 |
+> 18 |   useEffect(() => { fetchMedia(); }, []);
+     |                     ^^^^^^^^^^ `fetchMedia` accessed before it is declared
+  19 |
+  20 |   const fetchMedia = async () => {
+  21 |     const { data } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\media\page.tsx:20:3
+  18 |   useEffect(() => { fetchMedia(); }, []);
+  19 |
+> 20 |   const fetchMedia = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |     const { data } = await supabase.from('media').select('*').order('created_at', { ascending: false });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     setItems(data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 24 |   };
+     | ^^^^^ `fetchMedia` is declared here
+  25 |
+  26 |   const uploadFiles = async (files: FileList | File[]) => {
+  27 |     setUploading(true);  react-hooks/immutability
+  116:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @next/next/no-img-element
+  137:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @next/next/no-img-element
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\page.tsx
+  17:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\personnel\page.tsx
+   23:21  error    Error: Cannot access variable before it is declared
+
+`fetchAll` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\personnel\page.tsx:23:21
+  21 |   const [form, setForm] = useState({ full_name: '', rank: '╫ÿ╫ò╫¿╫É╫Ö', role: '', phone: '', bio: '', department_id: '', photo_url: '' });
+  22 |
+> 23 |   useEffect(() => { fetchAll(); }, []);
+     |                     ^^^^^^^^ `fetchAll` accessed before it is declared
+  24 |
+  25 |   const fetchAll = async () => {
+  26 |     const [depsRes, solRes] = await Promise.all([
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\personnel\page.tsx:25:3
+  23 |   useEffect(() => { fetchAll(); }, []);
+  24 |
+> 25 |   const fetchAll = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |     const [depsRes, solRes] = await Promise.all([
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |       supabase.from('departments').select('*').order('order'),
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 28 |       supabase.from('soldiers').select('*, departments(name, icon)').order('full_name'),
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 29 |     ]);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |     setDepartments(depsRes.data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |     setSoldiers(solRes.data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |   };
+     | ^^^^^ `fetchAll` is declared here
+  34 |
+  35 |   const openNew = () => {
+  36 |     setEditSoldier(null);  react-hooks/immutability
+   51:13  warning  'data' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  157:27  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @next/next/no-img-element
+  184:40  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @next/next/no-img-element
+  219:19  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @next/next/no-img-element
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\schedule\page.tsx
+  65:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\schedule\page.tsx:65:5
+  63 |
+  64 |   useEffect(() => {
+> 65 |     fetchEvents();
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  66 |     fetchMetadata();
+  67 |   }, []);
+  68 |  react-hooks/set-state-in-effect
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\soldier\[token]\page.tsx
+    6:51  warning  'CheckCircle' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+    6:72  warning  'AlertTriangle' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   17:10  warning  'portal' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   24:50  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   25:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   34:16  error    Error: Cannot access variable before it is declared
+
+`fetchPortal` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\soldier\[token]\page.tsx:34:16
+  32 |
+  33 |   useEffect(() => { 
+> 34 |     if (token) fetchPortal(); 
+     |                ^^^^^^^^^^^ `fetchPortal` accessed before it is declared
+  35 |   }, [token]);
+  36 |
+  37 |   const fetchPortal = async () => {
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\soldier\[token]\page.tsx:37:3
+  35 |   }, [token]);
+  36 |
+> 37 |   const fetchPortal = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |     const { data: soldierData } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |       .from('soldiers')
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 84 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 85 |   };
+     | ^^^^^ `fetchPortal` is declared here
+  86 |
+  87 |   const save = async () => {
+  88 |     if (!soldier) return;  react-hooks/immutability
+   35:6   warning  React Hook useEffect has a missing dependency: 'fetchPortal'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/exhaustive-deps
+  136:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @next/next/no-img-element
+  147:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  147:76  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  278:72  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\messages\page.tsx
+  17:5   error    Error: Cannot access variable before it is declared
+
+`fetchMetadata` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\messages\page.tsx:17:5
+  15 |
+  16 |   useEffect(() => {
+> 17 |     fetchMetadata();
+     |     ^^^^^^^^^^^^^ `fetchMetadata` accessed before it is declared
+  18 |     fetchMessages();
+  19 |   }, []);
+  20 |
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\messages\page.tsx:21:3
+  19 |   }, []);
+  20 |
+> 21 |   const fetchMetadata = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     const { data } = await supabase.from('departments').select('*').order('order');
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 23 |     if (data) setDepartments(data);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 24 |   };
+     | ^^^^^ `fetchMetadata` is declared here
+  25 |
+  26 |   const fetchMessages = async () => {
+  27 |     setLoading(true);                                                                                                                                                                                                                                                                                                           react-hooks/immutability
+  18:5   error    Error: Cannot access variable before it is declared
+
+`fetchMessages` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\messages\page.tsx:18:5
+  16 |   useEffect(() => {
+  17 |     fetchMetadata();
+> 18 |     fetchMessages();
+     |     ^^^^^^^^^^^^^ `fetchMessages` accessed before it is declared
+  19 |   }, []);
+  20 |
+  21 |   const fetchMetadata = async () => {
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\messages\page.tsx:26:3
+  24 |   };
+  25 |
+> 26 |   const fetchMessages = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 28 |     const { data, error } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 29 |       .from('messages')
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 30 |       .select('*, departments(name), soldiers(full_name)')
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 31 |       .order('created_at', { ascending: false });
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 32 |     
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 33 |     if (data) setMessages(data);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 35 |   };
+     | ^^^^^ `fetchMessages` is declared here
+  36 |
+  37 |   const openNew = () => {
+  38 |     setForm({ title: '', content: '', target_department_id: '' });  react-hooks/immutability
+  28:19  warning  'error' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  48:11  warning  'createdBy' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\page.tsx
+    6:80  warning  'ShieldCheck' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   58:21  error    Error: Cannot access variable before it is declared
+
+`fetchAll` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\page.tsx:58:21
+  56 |   const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
+  57 |
+> 58 |   useEffect(() => { fetchAll(); }, []);
+     |                     ^^^^^^^^ `fetchAll` accessed before it is declared
+  59 |
+  60 |   const fetchAll = async () => {
+  61 |     setRefreshing(true);
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\app\staff\page.tsx:60:3
+  58 |   useEffect(() => { fetchAll(); }, []);
+  59 |
+> 60 |   const fetchAll = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 61 |     setRefreshing(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |     const [depsRes, soldiersRes] = await Promise.all([
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 69 |     setRefreshing(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 70 |   };
+     | ^^^^^ `fetchAll` is declared here
+  71 |
+  72 |   const filtered = soldiers.filter(s => {
+  73 |     const matchDep = !filterDep || s.department_id === filterDep;  react-hooks/immutability
+  154:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  231:31  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  245:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @next/next/no-img-element
+  305:27  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @next/next/no-img-element
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\AuthWrapper.tsx
+  14:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\AuthWrapper.tsx:14:7
+  12 |     // Skip protection for login page and soldier public links
+  13 |     if (pathname === '/login' || pathname.startsWith('/soldier')) {
+> 14 |       setAuthorized(true);
+     |       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |       return;
+  16 |     }
+  17 |  react-hooks/set-state-in-effect
+  36:14  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\Sidebar.tsx
+  2:92  warning  'Send' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\SoldierForms.tsx
+  14:21  error    Error: Cannot access variable before it is declared
+
+`fetchForms` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\SoldierForms.tsx:14:21
+  12 |   const [answers, setAnswers] = useState<Record<string, string>>({});
+  13 |
+> 14 |   useEffect(() => { fetchForms(); }, [soldierId]);
+     |                     ^^^^^^^^^^ `fetchForms` accessed before it is declared
+  15 |
+  16 |   const fetchForms = async () => {
+  17 |     setLoading(true);
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\SoldierForms.tsx:16:3
+  14 |   useEffect(() => { fetchForms(); }, [soldierId]);
+  15 |
+> 16 |   const fetchForms = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 17 |     setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 18 |     // Fetch active forms
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 25 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 26 |   };
+     | ^^^^^ `fetchForms` is declared here
+  27 |
+  28 |   const submitResponse = async (formId: string, e: React.FormEvent) => {
+  29 |     e.preventDefault();  react-hooks/immutability
+  14:38  warning  React Hook useEffect has a missing dependency: 'fetchForms'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\SoldierRequests.tsx
+  16:5  error    Error: Cannot access variable before it is declared
+
+`fetchMyRequests` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\SoldierRequests.tsx:16:5
+  14 |
+  15 |   useEffect(() => {
+> 16 |     fetchMyRequests();
+     |     ^^^^^^^^^^^^^^^ `fetchMyRequests` accessed before it is declared
+  17 |   }, [soldierId]);
+  18 |
+  19 |   const fetchMyRequests = async () => {
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\SoldierRequests.tsx:19:3
+  17 |   }, [soldierId]);
+  18 |
+> 19 |   const fetchMyRequests = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 20 |     setLoading(true);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 21 |     const { data } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 22 |       .from('requests')
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 23 |       .select('*')
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 24 |       .eq('soldier_id', soldierId)
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 25 |       .order('created_at', { ascending: false });
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 26 |     setRequests(data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 27 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^
+> 28 |   };
+     | ^^^^^ `fetchMyRequests` is declared here
+  29 |
+  30 |   const submitRequest = async (e: React.FormEvent) => {
+  31 |     e.preventDefault();  react-hooks/immutability
+  17:6  warning  React Hook useEffect has a missing dependency: 'fetchMyRequests'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\StaffForms.tsx
+  31:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\StaffForms.tsx:31:5
+  29 |
+  30 |   useEffect(() => {
+> 31 |     fetchForms();
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  32 |   }, []);
+  33 |
+  34 |   const handleCreate = async (e: React.FormEvent) => {  react-hooks/set-state-in-effect
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\StaffRequests.tsx
+  23:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\YaelDrori\.gemini\antigravity\scratch\plugah-8170\src\components\StaffRequests.tsx:23:5
+  21 |
+  22 |   useEffect(() => {
+> 23 |     fetchRequests();
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  24 |   }, []);
+  25 |
+  26 |   const updateStatus = async (id: string, status: string) => {  react-hooks/set-state-in-effect
+
+Γ£û 52 problems (30 errors, 22 warnings)
+
+

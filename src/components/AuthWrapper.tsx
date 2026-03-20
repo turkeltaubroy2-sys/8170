@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function AuthWrapper({ children }: { children: React.ReactNode }) {
@@ -8,7 +8,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
+  const checkAuth = useCallback(() => {
     // Skip protection for login page and soldier public links
     if (pathname === '/login' || pathname.startsWith('/soldier')) {
       setAuthorized(true);
@@ -33,10 +33,17 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
       }
       
       setAuthorized(true);
-    } catch (e) {
+    } catch {
       router.push('/login');
     }
   }, [pathname, router]);
+
+  useEffect(() => {
+    const load = () => {
+      checkAuth();
+    };
+    load();
+  }, [checkAuth]);
 
   if (!authorized) {
     return (

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { supabase, Soldier, SoldierPortal, Schedule } from '@/lib/supabase';
-import { MapPin, Stethoscope, Backpack, FileText, CheckCircle, Shield, AlertTriangle, Send, Bell } from 'lucide-react';
+import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift } from '@/lib/supabase';
+import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell } from 'lucide-react';
+import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
 
@@ -14,15 +15,15 @@ export default function SoldierPortalPage() {
   const params = useParams();
   const token = params.token as string;
   const [soldier, setSoldier] = useState<Soldier | null>(null);
-  const [portal, setPortal] = useState<SoldierPortal | null>(null);
+  const [, setPortal] = useState<SoldierPortal | null>(null);
   const [missions, setMissions] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'messages'>('status');
-  const [guardEvents, setGuardEvents] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
     status: 'בבית',
     health_declaration: 'תקין',
@@ -30,11 +31,7 @@ export default function SoldierPortalPage() {
     personal_notes: '',
   });
 
-  useEffect(() => { 
-    if (token) fetchPortal(); 
-  }, [token]);
-
-  const fetchPortal = async () => {
+  const fetchPortal = useCallback(async () => {
     const { data: soldierData } = await supabase
       .from('soldiers')
       .select('*, departments(name,icon)')
@@ -82,7 +79,21 @@ export default function SoldierPortalPage() {
       await supabase.from('soldier_portals').insert({ soldier_id: soldierData.id, status: 'בבית', health_declaration: 'תקין' });
     }
     setLoading(false);
-  };
+  }, [token]);
+
+  useEffect(() => { 
+    const load = async () => {
+      if (token) await fetchPortal();
+    };
+    load();
+  }, [token, fetchPortal]);
+
+  interface GuardEventWithShifts {
+    id: string;
+    location: string;
+    start_time: string;
+    guard_shifts: GuardShift[];
+  }
 
   const save = async () => {
     if (!soldier) return;
@@ -133,7 +144,16 @@ export default function SoldierPortalPage() {
           <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Shield size={18} /> פלוגה 8170</div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             {soldier?.photo_url ? (
-              <img src={soldier.photo_url} alt={soldier.full_name} style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--accent)' }} />
+              <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
+                <Image 
+                  src={soldier.photo_url} 
+                  alt={soldier.full_name} 
+                  fill 
+                  className="object-cover" 
+                  style={{ borderRadius: '50%', border: '4px solid var(--accent)' }} 
+                  unoptimized
+                />
+              </div>
             ) : (
               <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent)', border: '4px solid var(--accent)' }}>
                 {soldier?.full_name.charAt(0)}
@@ -144,7 +164,7 @@ export default function SoldierPortalPage() {
           <p style={{ color: 'var(--text-muted)', marginTop: 4 }}>{soldier?.rank}{soldier?.role ? ` · ${soldier.role}` : ''}</p>
           {soldier?.departments && (
             <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 4 }}>
-              {(soldier.departments as any).icon} {(soldier.departments as any).name}
+              {soldier.departments.icon} {soldier.departments.name}
             </p>
           )}
           
@@ -275,7 +295,7 @@ export default function SoldierPortalPage() {
                                 
                                 setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
                                   ...e, 
-                                  guard_shifts: e.guard_shifts.map((s: any) => s.id === shift.id ? { ...s, soldier_id: soldier?.id } : s)
+                                  guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, soldier_id: soldier?.id || null } : s)
                                 } : e));
                                 setSaving(false);
                               }}

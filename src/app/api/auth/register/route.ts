@@ -30,11 +30,11 @@ export async function POST(request: Request) {
     const filePath = path.join(process.cwd(), 'src', 'data', 'alfon.xlsx');
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
-    const alfonData: any[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+    const alfonData: Record<string, unknown>[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
 
     // Search for the personal number
     // Some formats might read it as string or number, so we cast to string to verify
-    const soldierMeta = alfonData.find((row: any) => String(row['מ.א']) === String(personal_number));
+    const soldierMeta = alfonData.find((row) => String(row['מ.א']) === String(personal_number));
     console.log('Soldier find result:', soldierMeta ? 'FOUND' : 'NOT FOUND');
 
     if (!soldierMeta) {
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, soldier: newSoldier }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Registration API error:', error);
     return NextResponse.json({ error: error.message || 'שגיאת שרת פנימית' }, { status: 500 });
   }

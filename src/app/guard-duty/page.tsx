@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase, Soldier } from '@/lib/supabase';
 
@@ -34,11 +34,7 @@ export default function GuardDutyPage() {
   const [saving, setSaving] = useState(false);
   const [soldiers, setSoldiers] = useState<Pick<Soldier, 'id' | 'full_name'>[]>([]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const [evs, sols] = await Promise.all([
       supabase.from('guard_events').select('*, guard_shifts(*, soldiers(full_name))').order('created_at', { ascending: false }),
       supabase.from('soldiers').select('id, full_name').order('full_name')
@@ -46,7 +42,14 @@ export default function GuardDutyPage() {
     if (evs.data) setEvents(evs.data);
     if (sols.data) setSoldiers(sols.data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchData();
+    };
+    load();
+  }, [fetchData]);
 
   const publishEvent = async () => {
     if (!form.location || !form.start_time || !form.end_time || !form.shift_duration) return;
@@ -127,7 +130,7 @@ export default function GuardDutyPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                {events.map(ev => {
+                {events.map((ev: GuardEvent) => {
                   const sortedShifts = [...(ev.guard_shifts || [])].sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
                   const total = sortedShifts.length;
                   const filled = sortedShifts.filter(s => s.soldier_id).length;

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import Sidebar from '@/components/Sidebar';
 import { supabase, Soldier, Department } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,9 +21,7 @@ export default function PersonnelPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ full_name: '', rank: 'טוראי', role: '', phone: '', bio: '', department_id: '', photo_url: '' });
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     const [depsRes, solRes] = await Promise.all([
       supabase.from('departments').select('*').order('order'),
       supabase.from('soldiers').select('*, departments(name, icon)').order('full_name'),
@@ -30,7 +29,14 @@ export default function PersonnelPage() {
     setDepartments(depsRes.data || []);
     setSoldiers(solRes.data || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchAll();
+    };
+    load();
+  }, [fetchAll]);
 
   const openNew = () => {
     setEditSoldier(null);
@@ -48,7 +54,7 @@ export default function PersonnelPage() {
     setUploading(true);
     const ext = file.name.split('.').pop();
     const path = `${uuidv4()}.${ext}`;
-    const { data, error } = await supabase.storage.from('soldier-photos').upload(path, file);
+    const { error } = await supabase.storage.from('soldier-photos').upload(path, file);
     if (error) { alert('שגיאה בהעלאת תמונה'); setUploading(false); return; }
     const { data: urlData } = supabase.storage.from('soldier-photos').getPublicUrl(path);
     setForm(f => ({ ...f, photo_url: urlData.publicUrl }));
@@ -154,7 +160,15 @@ export default function PersonnelPage() {
                     {depSoldiers.map(s => (
                       <div key={s.id} className="soldier-card">
                         {s.photo_url ? (
-                          <img src={s.photo_url} alt={s.full_name} className="soldier-photo" />
+                          <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 180 }}>
+                            <Image 
+                              src={s.photo_url} 
+                              alt={s.full_name} 
+                              fill 
+                              className="soldier-photo object-cover" 
+                              unoptimized
+                            />
+                          </div>
                         ) : (
                           <div className="soldier-avatar">{s.full_name.charAt(0)}</div>
                         )}
@@ -181,7 +195,19 @@ export default function PersonnelPage() {
                   <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))' }}>
                     {unassigned.map(s => (
                       <div key={s.id} className="soldier-card">
-                        {s.photo_url ? <img src={s.photo_url} alt={s.full_name} className="soldier-photo" /> : <div className="soldier-avatar">{s.full_name.charAt(0)}</div>}
+                        {s.photo_url ? (
+                          <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 180 }}>
+                            <Image 
+                              src={s.photo_url} 
+                              alt={s.full_name} 
+                              fill 
+                              className="soldier-photo object-cover" 
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <div className="soldier-avatar">{s.full_name.charAt(0)}</div>
+                        )}
                         <h4>{s.full_name}</h4>
                         <p className="rank">{s.rank}</p>
                         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -216,7 +242,15 @@ export default function PersonnelPage() {
               {/* Photo Upload */}
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 {form.photo_url ? (
-                  <img src={form.photo_url} alt="תמונה" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--border-light)' }} />
+                  <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
+                    <Image 
+                      src={form.photo_url} 
+                      alt="תמונה" 
+                      fill
+                      style={{ borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--border-light)' }} 
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', border: '3px solid var(--border-light)' }}>
                     {form.full_name ? form.full_name.charAt(0) : '👤'}

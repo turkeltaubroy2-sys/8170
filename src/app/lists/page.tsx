@@ -1,8 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase, TaskList, ListItem } from '@/lib/supabase';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 
 export default function ListsPage() {
   const [lists, setLists] = useState<TaskList[]>([]);
@@ -16,13 +20,18 @@ export default function ListsPage() {
   const [newItemAssigned, setNewItemAssigned] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { fetchLists(); }, []);
-
-  const fetchLists = async () => {
+  const fetchLists = useCallback(async () => {
     const { data } = await supabase.from('lists').select('*').order('created_at', { ascending: false });
     setLists(data || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchLists();
+    };
+    load();
+  }, [fetchLists]);
 
   const fetchItems = async (listId: string) => {
     const { data } = await supabase.from('list_items').select('*').eq('list_id', listId).order('created_at', { ascending: true });
@@ -76,10 +85,10 @@ export default function ListsPage() {
     <div className="app-wrapper">
       <Sidebar />
       <main className="main-content">
-        <div className="page-header">
-          <h2>📋 רשימות ומשימות</h2>
-          <button className="btn btn-primary" onClick={() => setShowListModal(true)}>+ רשימה חדשה</button>
-        </div>
+        <PageHeader 
+          title="📋 רשימות ומשימות" 
+          actions={<Button onClick={() => setShowListModal(true)}>+ רשימה חדשה</Button>}
+        />
         <div className="page-body">
           <div className="lists-grid">
             {/* Lists sidebar */}
@@ -87,10 +96,10 @@ export default function ListsPage() {
               <h3 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12 }}>רשימות</h3>
               {loading ? <div className="loading-spinner"><div className="spinner" /></div> : (
                 lists.length === 0 ? (
-                  <div className="card" style={{ textAlign: 'center', padding: 30 }}>
+                  <Card style={{ textAlign: 'center', padding: 30 }}>
                     <p style={{ fontSize: '2rem' }}>📋</p>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 8 }}>אין רשימות עדיין</p>
-                  </div>
+                  </Card>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {lists.map(list => (
@@ -103,7 +112,7 @@ export default function ListsPage() {
                             <p style={{ fontWeight: 600, fontSize: '0.9rem', color: selectedList?.id === list.id ? 'var(--accent)' : 'var(--text)' }}>{list.title}</p>
                             {list.description && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{list.description}</p>}
                           </div>
-                          <button className="btn btn-danger btn-icon btn-sm" onClick={e => { e.stopPropagation(); deleteList(list.id); }}>🗑️</button>
+                          <Button variant="danger" size="sm" onClick={e => { e.stopPropagation(); deleteList(list.id); }}>🗑️</Button>
                         </div>
                       </div>
                     ))}
@@ -115,17 +124,13 @@ export default function ListsPage() {
             {/* Items */}
             <div>
               {!selectedList ? (
-                <div className="card" style={{ textAlign: 'center', padding: 60 }}>
+                <Card style={{ textAlign: 'center', padding: 60 }}>
                   <p style={{ fontSize: '3rem', marginBottom: 12 }}>👈</p>
                   <p style={{ color: 'var(--text-muted)' }}>בחר רשימה מהצד הימני או צור רשימה חדשה</p>
-                </div>
+                </Card>
               ) : (
-                <div className="card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div>
-                      <h3 style={{ fontWeight: 700, fontSize: '1.1rem' }}>{selectedList.title}</h3>
-                      {selectedList.description && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{selectedList.description}</p>}
-                    </div>
+                <Card title={selectedList.title} subtitle={selectedList.description || undefined}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
                     <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{doneCount}/{items.length} בוצע</span>
                   </div>
 
@@ -135,11 +140,15 @@ export default function ListsPage() {
                   </div>
 
                   {/* Add item */}
-                  <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-                    <input className="form-input" style={{ flex: 1, minWidth: '200px' }} value={newItemText} onChange={e => setNewItemText(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && addItem()} placeholder="פריט חדש (Enter להוספה)" />
-                    <input className="form-input" style={{ flex: 0.5, minWidth: '100px' }} value={newItemAssigned} onChange={e => setNewItemAssigned(e.target.value)} placeholder="אחראי" />
-                    <button className="btn btn-primary" onClick={addItem}>הוסף</button>
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <Input value={newItemText} onChange={e => setNewItemText(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addItem()} placeholder="פריט חדש (Enter להוספה)" style={{ marginBottom: 0 }} />
+                    </div>
+                    <div style={{ flex: 0.5, minWidth: '100px' }}>
+                      <Input value={newItemAssigned} onChange={e => setNewItemAssigned(e.target.value)} placeholder="אחראי" style={{ marginBottom: 0 }} />
+                    </div>
+                    <Button onClick={addItem} style={{ height: 42 }}>הוסף</Button>
                   </div>
 
                   {/* Items list */}
@@ -151,11 +160,11 @@ export default function ListsPage() {
                         <input type="checkbox" checked={item.done} onChange={() => toggleItem(item)} />
                         <span style={{ flex: 1 }}>{item.text}</span>
                         {item.assigned_to && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: 20 }}>{item.assigned_to}</span>}
-                        <button className="btn btn-danger btn-icon btn-sm" onClick={() => deleteItem(item.id)}>✕</button>
+                        <Button variant="danger" size="sm" onClick={() => deleteItem(item.id)}>✕</Button>
                       </div>
                     ))}
                   </div>
-                </div>
+                </Card>
               )}
             </div>
           </div>
@@ -166,19 +175,13 @@ export default function ListsPage() {
             <div className="modal">
               <div className="modal-header">
                 <h3>רשימה חדשה</h3>
-                <button className="btn btn-secondary btn-icon" onClick={() => setShowListModal(false)}>✕</button>
+                <Button variant="secondary" size="icon" onClick={() => setShowListModal(false)}>✕</Button>
               </div>
-              <div className="form-group">
-                <label className="form-label">שם הרשימה *</label>
-                <input className="form-input" value={newListTitle} onChange={e => setNewListTitle(e.target.value)} placeholder="למשל: ציוד לאימון, משימות שבוע" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">תיאור</label>
-                <input className="form-input" value={newListDesc} onChange={e => setNewListDesc(e.target.value)} placeholder="תיאור קצר (אופציונלי)" />
-              </div>
+              <Input label="שם הרשימה *" value={newListTitle} onChange={e => setNewListTitle(e.target.value)} placeholder="למשל: ציוד לאימון, משימות שבוע" />
+              <Input label="תיאור" value={newListDesc} onChange={e => setNewListDesc(e.target.value)} placeholder="תיאור קצר (אופציונלי)" />
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
-                <button className="btn btn-secondary" onClick={() => setShowListModal(false)}>ביטול</button>
-                <button className="btn btn-primary" onClick={createList} disabled={saving}>{saving ? 'יוצר...' : 'צור רשימה'}</button>
+                <Button variant="secondary" onClick={() => setShowListModal(false)}>ביטול</Button>
+                <Button onClick={createList} loading={saving}>צור רשימה</Button>
               </div>
             </div>
           </div>

@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { Card } from '@/components/ui/Card';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -11,7 +14,7 @@ export default function Dashboard() {
     openLists: 0,
     logisticsItems: 0,
   });
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<{ id: string; title: string; start_time: string; location?: string; color?: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,15 +68,11 @@ export default function Dashboard() {
     <div className="app-wrapper">
       <Sidebar />
       <main className="main-content">
-        <div className="page-header">
-          <div>
-            <h2>🏠 לוח בקרה</h2>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              {greeting} | {now.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          </div>
-          <span className="header-badge">🎖️ פלוגה 8170</span>
-        </div>
+        <PageHeader 
+          title="🏠 לוח בקרה" 
+          subtitle={`${greeting} | ${now.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
+          badge="🎖️ פלוגה 8170"
+        />
 
         <div className="page-body">
           {/* Hero Banner */}
@@ -88,42 +87,15 @@ export default function Dashboard() {
 
           {/* Stats Grid */}
           <div className="card-grid card-grid-4" style={{ marginBottom: 28 }}>
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-info">
-                <h3>{loading ? '—' : stats.soldiers}</h3>
-                <p>חיילים בפלוגה</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'rgba(200,168,75,0.2)' }}>📅</div>
-              <div className="stat-info">
-                <h3 style={{ color: 'var(--accent)' }}>{loading ? '—' : stats.todayEvents}</h3>
-                <p>אירועים היום</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'rgba(41,128,185,0.2)' }}>📋</div>
-              <div className="stat-info">
-                <h3 style={{ color: 'var(--info)' }}>{loading ? '—' : stats.openLists}</h3>
-                <p>רשימות פעילות</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon" style={{ background: 'rgba(39,174,96,0.2)' }}>📦</div>
-              <div className="stat-info">
-                <h3 style={{ color: 'var(--success)' }}>{loading ? '—' : stats.logisticsItems}</h3>
-                <p>פריטי ציוד</p>
-              </div>
-            </div>
+            <StatCard icon="👥" label="חיילים בפלוגה" value={stats.soldiers} loading={loading} />
+            <StatCard icon="📅" label="אירועים היום" value={stats.todayEvents} loading={loading} color="var(--accent)" />
+            <StatCard icon="📋" label="רשימות פעילות" value={stats.openLists} loading={loading} color="var(--info)" />
+            <StatCard icon="📦" label="פריטי ציוד" value={stats.logisticsItems} loading={loading} color="var(--success)" />
           </div>
 
           <div className="card-grid card-grid-2" style={{ marginBottom: 28 }}>
             {/* Upcoming Events */}
-            <div className="card">
-              <div className="section-header">
-                <h3>📅 אירועים קרובים</h3>
-              </div>
+            <Card title="📅 אירועים קרובים">
               {loading ? (
                 <div className="loading-spinner"><div className="spinner" /></div>
               ) : upcomingEvents.length === 0 ? (
@@ -143,13 +115,10 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
 
             {/* Quick Links */}
-            <div className="card">
-              <div className="section-header">
-                <h3>⚡ גישה מהירה</h3>
-              </div>
+            <Card title="⚡ גישה מהירה">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
                   { href: '/personnel', icon: '👥', label: 'אנשי הפלוגה', desc: 'צפה בכל החיילים לפי מחלקות' },
@@ -174,7 +143,7 @@ export default function Dashboard() {
                   </a>
                 ))}
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Info Banner */}

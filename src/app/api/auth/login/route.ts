@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       name: data.full_name
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Login error:', error);
     return NextResponse.json({ error: 'שגיאת שרת פנימית' }, { status: 500 });
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase, LogisticsItem } from '@/lib/supabase';
 
@@ -24,13 +24,18 @@ export default function LogisticsPage() {
   const [filterStatus, setFilterStatus] = useState('');
   const [form, setForm] = useState({ title: '', category: 'כללי', quantity: 1, unit: 'יחידה', status: 'זמין', notes: '', assigned_to: '' });
 
-  useEffect(() => { fetchItems(); }, []);
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     const { data } = await supabase.from('logistics').select('*').order('created_at', { ascending: false });
     setItems(data || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchItems();
+    };
+    load();
+  }, [fetchItems]);
 
   const openNew = () => {
     setEditItem(null);

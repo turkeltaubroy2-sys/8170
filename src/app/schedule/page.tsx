@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase, Schedule, Department, Soldier } from '@/lib/supabase';
 
@@ -39,21 +39,16 @@ export default function SchedulePage() {
     commander_id: '',
   });
 
-  useEffect(() => {
-    fetchEvents();
-    fetchMetadata();
-  }, []);
-
-  const fetchMetadata = async () => {
+  const fetchMetadata = useCallback(async () => {
     const [deps, sols] = await Promise.all([
       supabase.from('departments').select('id, name, icon, order').order('order'),
       supabase.from('soldiers').select('id, full_name, department_id').order('full_name'),
     ]);
     if (deps.data) setDepartments(deps.data);
     if (sols.data) setSoldiers(sols.data);
-  };
+  }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('schedules')
@@ -64,7 +59,15 @@ export default function SchedulePage() {
     }
     setEvents(data || []);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchEvents();
+      await fetchMetadata();
+    };
+    load();
+  }, [fetchEvents, fetchMetadata]);
 
   const openNew = () => {
     setEditEvent(null);

@@ -1,5 +1,5 @@
 'use client';
-import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock, Send, Bell } from 'lucide-react';
+import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
