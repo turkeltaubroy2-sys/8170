@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift } from '@/lib/supabase';
-import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell, Calendar } from 'lucide-react';
+import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell, Calendar, Camera } from 'lucide-react';
 import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
@@ -110,6 +110,44 @@ export default function SoldierPortalPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !soldier) return;
+
+    setSaving(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${soldier.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('soldiers')
+        .update({ photo_url: publicUrl })
+        .eq('id', soldier.id);
+
+      if (updateError) throw updateError;
+
+      setSoldier({ ...soldier, photo_url: publicUrl });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Error uploading photo:', err);
+      alert('שגיאה בהעלאת התמונה. וודא שקיים bucket בשם avatars ב-Supabase.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="loading-spinner"><div className="spinner" /><span>טוען פורטל...</span></div>
@@ -146,7 +184,7 @@ export default function SoldierPortalPage() {
           <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Shield size={18} /> פלוגה 8170</div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             {soldier?.photo_url ? (
-              <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto' }}>
+              <div style={{ position: 'relative', width: 100, height: 100 }}>
                 <Image 
                   src={soldier.photo_url} 
                   alt={soldier.full_name} 
@@ -155,10 +193,18 @@ export default function SoldierPortalPage() {
                   style={{ borderRadius: '50%', border: '4px solid var(--accent)' }} 
                   unoptimized
                 />
+                <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                  <Camera size={16} />
+                  <input type="file" accept="image/*" capture="user" hidden onChange={handlePhotoUpload} disabled={saving} />
+                </label>
               </div>
             ) : (
-              <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent)', border: '4px solid var(--accent)' }}>
+              <div style={{ position: 'relative', width: 100, height: 100, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent)', border: '4px solid var(--accent)' }}>
                 {soldier?.full_name.charAt(0)}
+                <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                  <Camera size={16} />
+                  <input type="file" accept="image/*" capture="user" hidden onChange={handlePhotoUpload} disabled={saving} />
+                </label>
               </div>
             )}
           </div>

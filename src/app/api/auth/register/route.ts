@@ -8,7 +8,7 @@ import fs from 'fs';
 // This runs on the Node side, so we can securely parse the Excel file.
 export async function POST(request: Request) {
   try {
-    const { personal_number, password } = await request.json();
+    const { personal_number, password, photo_url } = await request.json();
     console.log('Registration attempt for P.N:', personal_number);
 
     if (!personal_number || !password) {
@@ -104,6 +104,7 @@ export async function POST(request: Request) {
         rank: rank,
         role: role,
         department_id: departmentId,
+        photo_url: photo_url || null,
         unique_token: crypto.randomUUID()
       })
       .select()

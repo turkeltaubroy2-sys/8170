@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Camera } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +15,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +40,29 @@ export default function RegisterPage() {
     setError('');
 
     try {
+      let photoUrl = null;
+      if (photo) {
+        const fileExt = photo.name.split('.').pop();
+        const fileName = `reg-${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, photo);
+
+        if (uploadError) throw new Error('שגיאה בהעלאת התמונה: ' + uploadError.message);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        
+        photoUrl = publicUrl;
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ personal_number: personalNumber, password }),
+        body: JSON.stringify({ personal_number: personalNumber, password, photo_url: photoUrl }),
       });
 
       const data = await res.json();
@@ -79,6 +102,35 @@ export default function RegisterPage() {
         {error && <div className="login-error">{error}</div>}
 
         <form onSubmit={handleRegister}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+            <div style={{ position: 'relative', width: 80, height: 80 }}>
+              {photoPreview ? (
+                <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--accent)' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'var(--bg)', border: '2px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                  <Camera size={32} />
+                </div>
+              )}
+              <label style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--accent)', color: 'black', width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid var(--bg-surface)' }}>
+                <Camera size={14} />
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="user" 
+                  hidden 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPhoto(file);
+                      setPhotoPreview(URL.createObjectURL(file));
+                    }
+                  }} 
+                />
+              </label>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 8 }}>הוסף תמונת פרופיל (אופציונלי)</p>
+          </div>
+
           <Input
             label="מספר אישי (מ.א)"
             type="number"
