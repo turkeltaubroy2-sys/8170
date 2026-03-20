@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Eye, EyeOff, LogIn } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -64,8 +65,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, fontFamily: 'Heebo', direction: 'rtl' }}>
-      <div className="card" style={{ width: '100%', maxWidth: 400, padding: 32, background: 'var(--glass)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--border-light)', boxShadow: 'var(--shadow)' }}>
+    <div className="login-container">
+      <div className="login-box">
         
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ display: 'inline-flex', padding: 16, borderRadius: '50%', background: 'var(--bg-card)', border: '1px solid var(--border-light)', marginBottom: 16 }}>
@@ -126,23 +127,26 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: 24 }}>
-          <a
+          <Link
             href="/register"
             style={{
               display: 'block',
               textAlign: 'center',
-              padding: '12px',
+              padding: '14px',
               borderRadius: 8,
-              background: 'rgba(255,255,255,0.06)',
+              background: 'rgba(200,168,75,0.1)',
               border: '2px solid var(--accent)',
               color: 'var(--accent)',
               fontWeight: 700,
-              fontSize: '1rem',
+              fontSize: '1.1rem',
               textDecoration: 'none',
+              cursor: 'pointer',
+              zIndex: 10,
+              position: 'relative'
             }}
           >
-            חייל חדש בפלוגה? לחץ כאן להרשמה
-          </a>
+            📋 חייל חדש בפלוגה? לחץ כאן להרשמה
+          </Link>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center', marginTop: 14 }}>
             במקרה של תקלה נא לפנות לטורקל המלך
           </p>

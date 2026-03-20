@@ -930,3 +930,52 @@ tr:hover td {
     gap: 12px;
   }
 }
+/* ============ LOGIN & REGISTER ============ */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top right, #1a2f12, var(--bg));
+  padding: 20px;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.login-error {
+  background: rgba(231, 111, 81, 0.15);
+  color: #ff9e81;
+  padding: 12px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  border-right: 4px solid var(--danger);
+  font-size: 0.88rem;
+}
