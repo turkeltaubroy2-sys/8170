@@ -585,6 +585,37 @@ tr:hover td {
   color: var(--text-dim);
 }
 
+/* ============ TABS & MENUS ============ */
+.tab-menu {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  padding-bottom: 10px;
+  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+.tab-menu::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+@media (max-width: 600px) {
+  .tab-menu {
+    gap: 12px;
+    justify-content: flex-start;
+    padding: 0 4px 10px;
+    flex-wrap: nowrap; /* Keep it scrolling but clean */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab-menu button {
+    font-size: 0.9rem !important;
+    padding-bottom: 8px !important;
+  }
+}
+
 /* ============ STATUS INDICATOR ============ */
 .status-dot {
   width: 8px;

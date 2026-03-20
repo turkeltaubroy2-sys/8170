@@ -30,6 +30,8 @@ export default function SoldierPortalPage() {
     equipment_notes: '',
     personal_notes: '',
   });
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [rotationNote, setRotationNote] = useState('');
 
   const fetchPortal = useCallback(async () => {
     const { data: soldierData } = await supabase
@@ -129,7 +131,7 @@ export default function SoldierPortalPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'Heebo', direction: 'rtl', padding: '20px 16px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'Heebo', direction: 'rtl', padding: '20px 16px', overflowX: 'hidden' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ position: 'relative', textAlign: 'center', marginBottom: 28 }}>
@@ -176,7 +178,7 @@ export default function SoldierPortalPage() {
         </div>
 
         {/* Main Tab Navigation */}
-        <div className="tab-menu" style={{ display: 'flex', gap: 24, borderBottom: '1px solid var(--border)', marginBottom: 24, paddingBottom: 10, justifyContent: 'center', overflowX: 'auto', whiteSpace: 'nowrap' }}>
+        <div className="tab-menu">
           <button 
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'status' ? 600 : 400, color: activeTab === 'status' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'status' ? '3px solid var(--accent)' : '3px solid transparent' }}
             onClick={() => setActiveTab('status')}
@@ -370,13 +372,15 @@ export default function SoldierPortalPage() {
               </div>
             </div>
 
-            {/* Lebanon Rotation Calendar */}
+            {/* Lebanon Rotation Request Calendar */}
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Calendar size={18} className="text-muted" /> סבב כניסות / יציאות לבנון
+                <Calendar size={18} className="text-muted" /> בקשות מיוחדות - סבב כניסות ויציאות לבנון
               </h3>
               
               <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>סמן ימים בלוח להגשת בקשת יציאה מיוחדת:</p>
+                
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
                   {['א','ב','ג','ד','ה','ו','ש'].map(d => (
                     <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-dim)', paddingBottom: 4 }}>{d}</div>
@@ -389,65 +393,90 @@ export default function SoldierPortalPage() {
                   {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
                     const day = i + 1;
                     const dateStr = new Date(new Date().getFullYear(), new Date().getMonth(), day).toISOString().split('T')[0];
+                    const isSelected = selectedDates.includes(dateStr);
                     const rotation = missions.find(m => m.title === 'סבב לבנון' && m.start_time.startsWith(dateStr));
-                    const color = rotation?.color || 'transparent';
-                    const isCommander = soldier?.role?.includes('סגל') || soldier?.role?.includes('מפקד');
+                    const isStaffColored = !!rotation;
+                    const color = rotation?.color;
                     
                     return (
                       <button 
                         key={day}
-                        disabled={saving || !isCommander}
-                        onClick={async () => {
-                          if (!isCommander || !soldier) return;
-                          setSaving(true);
-                          
-                          if (!rotation) {
-                            // Create Lebanon (Blue)
-                            const { data } = await supabase.from('schedules').insert({
-                              title: 'סבב לבנון',
-                              start_time: `${dateStr}T00:00:00Z`,
-                              end_time: `${dateStr}T23:59:59Z`,
-                              all_day: true,
-                              color: '#2980b9', // Blue
-                              department_id: soldier.department_id
-                            }).select().single();
-                            if (data) setMissions(prev => [...prev, data]);
-                          } else if (rotation.color === '#2980b9') {
-                            // Switch to Home (Green)
-                            const { data } = await supabase.from('schedules').update({
-                              color: '#4A6741' // Green
-                            }).eq('id', rotation.id).select().single();
-                            if (data) setMissions(prev => prev.map(m => m.id === data.id ? data : m));
-                          } else {
-                            // Delete
-                            await supabase.from('schedules').delete().eq('id', rotation.id);
-                            setMissions(prev => prev.filter(m => m.id !== rotation.id));
-                          }
-                          setSaving(false);
+                        disabled={saving}
+                        onClick={() => {
+                          setSelectedDates(prev => prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]);
                         }}
                         style={{ 
                           aspectRatio: '1', 
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          borderRadius: 8, border: '1px solid var(--border)',
-                          background: color === 'transparent' ? 'rgba(255,255,255,0.03)' : color,
-                          color: color === 'transparent' ? 'var(--text)' : 'white',
-                          fontSize: '0.85rem', fontWeight: 700, cursor: isCommander ? 'pointer' : 'default',
-                          transition: 'all 0.2s',
-                          boxShadow: color !== 'transparent' ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                          borderRadius: 8, 
+                          border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
+                          background: isSelected ? 'rgba(200, 168, 75, 0.25)' : isStaffColored ? `${color}44` : 'rgba(255,255,255,0.03)',
+                          color: isSelected ? 'var(--accent)' : 'var(--text)',
+                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          boxShadow: isSelected ? '0 0 10px rgba(200, 168, 75, 0.3)' : 'none',
+                          position: 'relative'
                         }}
                       >
                         {day}
+                        {isStaffColored && !isSelected && (
+                          <div style={{ position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: '50%', background: color }} />
+                        )}
                       </button>
                     );
                   })}
                 </div>
+
+                {selectedDates.length > 0 && (
+                  <div style={{ marginTop: 20, padding: 16, background: 'rgba(200, 168, 75, 0.05)', borderRadius: 12, border: '1px solid rgba(200, 168, 75, 0.2)' }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 12, color: 'var(--accent)' }}>פרטי הבקשה ({selectedDates.length} ימים נבחרו)</h4>
+                    <textarea 
+                      className="form-textarea" 
+                      placeholder="הסבר קצר על בקשת היציאה..."
+                      value={rotationNote}
+                      onChange={e => setRotationNote(e.target.value)}
+                      rows={2}
+                      style={{ background: 'var(--bg)', marginBottom: 12 }}
+                    />
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ width: '100%', justifyContent: 'center' }}
+                      disabled={saving}
+                      onClick={async () => {
+                        if (!soldier) return;
+                        setSaving(true);
+                        const sortedDates = [...selectedDates].sort().map(d => new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })).join(', ');
+                        
+                        await supabase.from('requests').insert({
+                          soldier_id: soldier.id,
+                          title: 'בקשת יציאה - סבב לבנון',
+                          type: 'rotation',
+                          status: 'pending',
+                          description: `תאריכים: ${sortedDates}\n\nהערות: ${rotationNote}`
+                        });
+                        
+                        setSaving(false);
+                        setSelectedDates([]);
+                        setRotationNote('');
+                        setSaved(true);
+                        setTimeout(() => setSaved(false), 3000);
+                        setActiveTab('requests'); // Switch to requests tab to show it
+                      }}
+                    >
+                      {saving ? '⏳ שולח...' : '🛡️ הגש בקשת סבב'}
+                    </button>
+                  </div>
+                )}
                 
-                <div style={{ display: 'flex', gap: 16, marginTop: 16, fontSize: '0.75rem', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: 16, marginTop: 16, fontSize: '0.7rem', justifyContent: 'center', color: 'var(--text-dim)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: '#2980b9' }} /> <span>בתוך לבנון</span>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(200, 168, 75, 0.4)', border: '1px solid var(--accent)' }} /> <span>נבחר לבקשה</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: 3, background: '#4A6741' }} /> <span>בבית / התרעננות</span>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(41, 128, 185, 0.4)' }} /> <span>סגל: כניסה</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(74, 103, 65, 0.4)' }} /> <span>סגל: בית</span>
                   </div>
                 </div>
               </div>
