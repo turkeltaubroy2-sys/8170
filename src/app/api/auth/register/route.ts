@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import * as xlsx from 'xlsx';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 
 // This runs on the Node side, so we can securely parse the Excel file.
 export async function POST(request: Request) {
@@ -26,8 +27,24 @@ export async function POST(request: Request) {
     }
 
     // 2. Read the Excel file to find the soldier
-    // Using path.join with process.cwd() works natively in Next.js Server Actions/API routes
-    const filePath = path.join(process.cwd(), 'src', 'data', 'alfon.xlsx');
+    // Using path.resolve with process.cwd() for better reliability on Windows/Next.js
+    const projectRoot = process.cwd();
+    let filePath = path.join(projectRoot, 'src', 'data', 'alfon.xlsx');
+    
+    console.log('--- Registration Debug ---');
+    console.log('Project Root:', projectRoot);
+    console.log('Target File Path:', filePath);
+
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found at src/data, checking root data folder...');
+      filePath = path.join(projectRoot, 'data', 'alfon.xlsx');
+    }
+
+    if (!fs.existsSync(filePath)) {
+      console.error('CRITICAL: alfon.xlsx not found at any known location');
+      return NextResponse.json({ error: 'קובץ הנתונים (alfon.xlsx) חסר בשרת. נא לפנות למנהל המערכת.' }, { status: 500 });
+    }
+
     const workbook = xlsx.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const alfonData: Record<string, unknown>[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
