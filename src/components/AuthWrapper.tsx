@@ -10,7 +10,7 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
 
   const checkAuth = useCallback(() => {
     // Skip protection for login page and soldier public links
-    if (pathname === '/login' || pathname.startsWith('/soldier')) {
+    if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/soldier')) {
       setAuthorized(true);
       return;
     }
