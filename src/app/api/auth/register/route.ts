@@ -45,7 +45,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'קובץ הנתונים (alfon.xlsx) חסר בשרת. נא לפנות למנהל המערכת.' }, { status: 500 });
     }
 
-    const workbook = xlsx.readFile(filePath);
+    // Direct buffer read to bypass xlsx.readFile access issues
+    let workbook;
+    try {
+      const stats = fs.statSync(filePath);
+      console.log('File exists, size:', stats.size, 'bytes');
+      console.log('File permissions:', stats.mode.toString(8));
+      
+      const fileBuffer = fs.readFileSync(filePath);
+      workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+      console.log('Successfully read workbook using Buffer');
+    } catch (readErr) {
+      console.error('Error during direct file read:', readErr);
+      throw new Error(`שגיאה בגישה לקובץ הנתונים: ${readErr instanceof Error ? readErr.message : 'שגיאה לא ידועה'}`);
+    }
     const sheetName = workbook.SheetNames[0];
     const alfonData: Record<string, unknown>[] = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
 
