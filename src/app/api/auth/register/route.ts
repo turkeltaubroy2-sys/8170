@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import * as xlsx from 'xlsx';
 import path from 'path';
+import crypto from 'crypto';
 
 // This runs on the Node side, so we can securely parse the Excel file.
 export async function POST(request: Request) {
   try {
     const { personal_number, password } = await request.json();
+    console.log('Registration attempt for P.N:', personal_number);
 
     if (!personal_number || !password) {
       return NextResponse.json({ error: 'חסרים נתונים' }, { status: 400 });
@@ -17,7 +19,7 @@ export async function POST(request: Request) {
       .from('soldiers')
       .select('id')
       .eq('personal_number', personal_number)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       return NextResponse.json({ error: 'משתמש זה כבר רשום במערכת' }, { status: 400 });
@@ -33,6 +35,7 @@ export async function POST(request: Request) {
     // Search for the personal number
     // Some formats might read it as string or number, so we cast to string to verify
     const soldierMeta = alfonData.find((row: any) => String(row['מ.א']) === String(personal_number));
+    console.log('Soldier find result:', soldierMeta ? 'FOUND' : 'NOT FOUND');
 
     if (!soldierMeta) {
       return NextResponse.json({ error: 'המספר האישי אינו מופיע במאגר הפלוגה. ודא שהוקלד נכון.' }, { status: 404 });
@@ -48,15 +51,16 @@ export async function POST(request: Request) {
     // In the file it says e.g. "1", "2" under "מחלקה". We need the UUID from the DB.
     let deptName = `מחלקה ${soldierMeta['מחלקה']}`;
     if (!soldierMeta['מחלקה'] || String(soldierMeta['מחלקה']).trim() === '') {
-      deptName = 'חפ"ק'; // Generic default or maybe from 'תפקיד'
+      deptName = 'חפ"ק';
     }
 
-    // Fetch department ID
+    // Standardize deptName look-up (some might have extra spaces)
     const { data: department } = await supabase
       .from('departments')
       .select('id')
-      .eq('name', deptName)
-      .single();
+      .ilike('name', deptName)
+      .limit(1)
+      .maybeSingle();
 
     const departmentId = department ? department.id : null;
 
@@ -74,6 +78,8 @@ export async function POST(request: Request) {
       })
       .select()
       .single();
+
+    console.log('Register successful for:', newSoldier?.full_name);
 
     if (insertError) {
       console.error('Error inserting soldier:', insertError);

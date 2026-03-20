@@ -46,15 +46,15 @@ export default function RegisterPage() {
         throw new Error(data.error || 'אירעה שגיאה בהרשמה');
       }
 
-      // Store in localStorage for login
+      // Save to localStorage using the same format as login
       if (data.soldier) {
-        localStorage.setItem('soldier_token', data.soldier.unique_token || data.soldier.id);
-        localStorage.setItem('soldier_id', data.soldier.id);
-        localStorage.setItem('soldier_name', data.soldier.full_name);
-        if (data.soldier.department_id) {
-          localStorage.setItem('department_id', data.soldier.department_id);
-        }
-        // Redirect to the soldier portal with token
+        localStorage.setItem('plugah_user', JSON.stringify({ 
+          role: 'soldier', 
+          token: data.soldier.unique_token, 
+          name: data.soldier.full_name 
+        }));
+        
+        // Redirect to the tokenized portal
         router.push(`/soldier/${data.soldier.unique_token}`);
       } else {
         router.push('/login');

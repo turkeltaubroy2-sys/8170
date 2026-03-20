@@ -145,6 +145,12 @@ export default function StaffPage() {
           >
             <FileText size={16} /> דוח 1 ושאלונים
           </button>
+          <Link 
+            href="/staff/messages"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text)', fontSize: '1rem', paddingBottom: 10, borderBottom: '3px solid transparent' }}
+          >
+            <Send size={16} /> לוח מודעות
+          </Link>
         </div>
 
         <div className="page-body">

@@ -80,8 +80,8 @@ export default function MessagesPage() {
       <Sidebar />
       <main className="main-content">
         <div className="page-header">
-          <h2>📢 הודעות פלוגה</h2>
-          <button className="btn btn-primary" onClick={openNew}>+ שלח הודעה חדשה</button>
+          <h2>📢 לוח מודעות פלוגתי</h2>
+          <button className="btn btn-primary" onClick={openNew}>+ פרסם מודעה חדשה</button>
         </div>
         
         <div className="page-body">

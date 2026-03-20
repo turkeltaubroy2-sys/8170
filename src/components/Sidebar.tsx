@@ -1,5 +1,5 @@
 'use client';
-import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock } from 'lucide-react';
+import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock, Send, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/logistics', icon: <Package size={18} />, label: 'לוגיסטיקה' },
   { href: '/personnel', icon: <Users size={18} />, label: 'לוחמים' },
   { href: '/media', icon: <ImageIcon size={18} />, label: 'מדיה' },
+  { href: '/staff/messages', icon: <Bell size={18} />, label: 'לוח מודעות' },
   { href: '/staff', icon: <Shield size={18} />, label: 'סגל' },
 ];
 
@@ -23,6 +24,7 @@ export default function Sidebar() {
     { href: '/schedule', icon: '📅', label: 'לו"ז' },
     { href: '/guard-duty', icon: '🛡️', label: 'שמירות' },
     { href: '/personnel', icon: '👥', label: 'לוחמים' },
+    { href: '/staff/messages', icon: '📢', label: 'לוח' },
     { href: '/staff', icon: '👁️', label: 'סגל' },
   ];
 

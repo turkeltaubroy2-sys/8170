@@ -185,7 +185,7 @@ export default function SoldierPortalPage() {
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'messages' ? 600 : 400, color: activeTab === 'messages' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'messages' ? '3px solid var(--accent)' : '3px solid transparent', position: 'relative' }}
             onClick={() => setActiveTab('messages')}
           >
-            <Bell size={16} /> הודעות
+            <Bell size={16} /> לוח מודעות
             {messages.length > 0 && (
               <span style={{ position: 'absolute', top: -3, right: -10, background: 'var(--danger)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: 10 }}>
                 {messages.length}
@@ -206,7 +206,7 @@ export default function SoldierPortalPage() {
             {messages.length === 0 ? (
               <div className="card" style={{ textAlign: 'center', padding: 40 }}>
                 <Bell size={40} style={{ margin: '0 auto 12px', color: 'var(--text-muted)' }} />
-                <p style={{ color: 'var(--text-muted)' }}>אין הודעות חדשות מהסגל.</p>
+                <p style={{ color: 'var(--text-muted)' }}>אין הודעות חדשות בלוח המודעות.</p>
               </div>
             ) : messages.map(msg => (
               <div key={msg.id} className="card" style={{ padding: 20, borderLeft: '4px solid var(--accent)' }}>
