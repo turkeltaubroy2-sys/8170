@@ -604,10 +604,9 @@ tr:hover td {
 @media (max-width: 600px) {
   .tab-menu {
     gap: 12px;
-    justify-content: flex-start;
+    justify-content: center;
     padding: 0 4px 10px;
-    flex-wrap: nowrap; /* Keep it scrolling but clean */
-    -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap; /* Wrap to ensure visibility */
   }
   
   .tab-menu button {

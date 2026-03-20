@@ -467,17 +467,17 @@ export default function SoldierPortalPage() {
                     </button>
                   </div>
                 )}
-                
-                <div style={{ display: 'flex', gap: 16, marginTop: 16, fontSize: '0.7rem', justifyContent: 'center', color: 'var(--text-dim)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(200, 168, 75, 0.4)', border: '1px solid var(--accent)' }} /> <span>נבחר לבקשה</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(41, 128, 185, 0.4)' }} /> <span>סגל: כניסה</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(74, 103, 65, 0.4)' }} /> <span>סגל: בית</span>
-                  </div>
+              </div>
+              
+              <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: '0.7rem', justifyContent: 'center', color: 'var(--text-dim)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(200, 168, 75, 0.4)', border: '1px solid var(--accent)' }} /> <span>נבחר לבקשה</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(41, 128, 185, 0.4)' }} /> <span>סגל: כניסה</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(74, 103, 65, 0.4)' }} /> <span>סגל: בית</span>
                 </div>
               </div>
             </div>
