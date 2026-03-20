@@ -87,8 +87,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: true, soldier: newSoldier }, { status: 201 });
-  } catch (error: unknown) {
-    console.error('Registration API error:', error);
-    return NextResponse.json({ error: error.message || 'שגיאת שרת פנימית' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'שגיאת שרת פנימית';
+    console.error('Registration API error:', err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
