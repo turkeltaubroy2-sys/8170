@@ -89,6 +89,7 @@ export default function RegisterPage() {
               placeholder="לדוגמה: 8857288"
               required
               disabled={loading}
+              autoComplete="username"
               style={{ textAlign: 'left' }}
             />
           </div>
@@ -105,6 +106,7 @@ export default function RegisterPage() {
               placeholder="בחר סיסמה מאובטחת"
               required
               disabled={loading}
+              autoComplete="new-password"
               style={{ textAlign: 'left' }}
             />
           </div>
@@ -121,6 +123,7 @@ export default function RegisterPage() {
               placeholder="הקלד את הסיסמה שנית"
               required
               disabled={loading}
+              autoComplete="new-password"
               style={{ textAlign: 'left' }}
             />
           </div>
