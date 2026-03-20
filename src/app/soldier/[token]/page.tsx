@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift } from '@/lib/supabase';
-import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell } from 'lucide-react';
+import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
@@ -164,7 +164,7 @@ export default function SoldierPortalPage() {
           <p style={{ color: 'var(--text-muted)', marginTop: 4 }}>{soldier?.rank}{soldier?.role ? ` · ${soldier.role}` : ''}</p>
           {soldier?.departments && (
             <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 4 }}>
-              {soldier.departments.icon} {soldier.departments.name}
+              {soldier.departments.name}
             </p>
           )}
           
@@ -175,8 +175,8 @@ export default function SoldierPortalPage() {
           )}
         </div>
 
-        {/* Mian Tab Navigation */}
-        <div className="tab-menu" style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--border)', marginBottom: 24, paddingBottom: 10, overflowX: 'auto', whiteSpace: 'nowrap' }}>
+        {/* Main Tab Navigation */}
+        <div className="tab-menu" style={{ display: 'flex', gap: 24, borderBottom: '1px solid var(--border)', marginBottom: 24, paddingBottom: 10, justifyContent: 'center', overflowX: 'auto', whiteSpace: 'nowrap' }}>
           <button 
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'status' ? 600 : 400, color: activeTab === 'status' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'status' ? '3px solid var(--accent)' : '3px solid transparent' }}
             onClick={() => setActiveTab('status')}
@@ -370,22 +370,86 @@ export default function SoldierPortalPage() {
               </div>
             </div>
 
-            {/* Health */}
+            {/* Lebanon Rotation Calendar */}
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Stethoscope size={18} className="text-muted" /> הצהרת בריאות
+                <Calendar size={18} className="text-muted" /> סבב כניסות / יציאות לבנון
               </h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {HEALTH.map(h => (
-                  <button key={h} onClick={() => setForm(f => ({ ...f, health_declaration: h }))} style={{
-                    padding: '8px 16px', borderRadius: 20, border: `2px solid ${form.health_declaration === h ? 'var(--accent)' : 'var(--border)'}`,
-                    background: form.health_declaration === h ? 'rgba(200,168,75,0.12)' : 'transparent',
-                    color: form.health_declaration === h ? 'var(--accent)' : 'var(--text-muted)',
-                    fontFamily: 'Heebo', fontWeight: 600, cursor: 'pointer', fontSize: '0.88rem', transition: 'all 0.2s',
-                  }}>
-                    {h}
-                  </button>
-                ))}
+              
+              <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+                  {['א','ב','ג','ד','ה','ו','ש'].map(d => (
+                    <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-dim)', paddingBottom: 4 }}>{d}</div>
+                  ))}
+                  
+                  {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                    <div key={`empty-${i}`} />
+                  ))}
+                  
+                  {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                    const day = i + 1;
+                    const dateStr = new Date(new Date().getFullYear(), new Date().getMonth(), day).toISOString().split('T')[0];
+                    const rotation = missions.find(m => m.title === 'סבב לבנון' && m.start_time.startsWith(dateStr));
+                    const color = rotation?.color || 'transparent';
+                    const isCommander = soldier?.role?.includes('סגל') || soldier?.role?.includes('מפקד');
+                    
+                    return (
+                      <button 
+                        key={day}
+                        disabled={saving || !isCommander}
+                        onClick={async () => {
+                          if (!isCommander || !soldier) return;
+                          setSaving(true);
+                          
+                          if (!rotation) {
+                            // Create Lebanon (Blue)
+                            const { data } = await supabase.from('schedules').insert({
+                              title: 'סבב לבנון',
+                              start_time: `${dateStr}T00:00:00Z`,
+                              end_time: `${dateStr}T23:59:59Z`,
+                              all_day: true,
+                              color: '#2980b9', // Blue
+                              department_id: soldier.department_id
+                            }).select().single();
+                            if (data) setMissions(prev => [...prev, data]);
+                          } else if (rotation.color === '#2980b9') {
+                            // Switch to Home (Green)
+                            const { data } = await supabase.from('schedules').update({
+                              color: '#4A6741' // Green
+                            }).eq('id', rotation.id).select().single();
+                            if (data) setMissions(prev => prev.map(m => m.id === data.id ? data : m));
+                          } else {
+                            // Delete
+                            await supabase.from('schedules').delete().eq('id', rotation.id);
+                            setMissions(prev => prev.filter(m => m.id !== rotation.id));
+                          }
+                          setSaving(false);
+                        }}
+                        style={{ 
+                          aspectRatio: '1', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          borderRadius: 8, border: '1px solid var(--border)',
+                          background: color === 'transparent' ? 'rgba(255,255,255,0.03)' : color,
+                          color: color === 'transparent' ? 'var(--text)' : 'white',
+                          fontSize: '0.85rem', fontWeight: 700, cursor: isCommander ? 'pointer' : 'default',
+                          transition: 'all 0.2s',
+                          boxShadow: color !== 'transparent' ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                        }}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <div style={{ display: 'flex', gap: 16, marginTop: 16, fontSize: '0.75rem', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: '#2980b9' }} /> <span>בתוך לבנון</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: '#4A6741' }} /> <span>בבית / התרעננות</span>
+                  </div>
+                </div>
               </div>
             </div>
 
