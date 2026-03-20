@@ -180,34 +180,39 @@ export default function SoldierPortalPage() {
         {/* Main Tab Navigation */}
         <div className="tab-menu">
           <button 
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'status' ? 600 : 400, color: activeTab === 'status' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'status' ? '3px solid var(--accent)' : '3px solid transparent' }}
+            className={activeTab === 'status' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'status' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('status')}
           >
             <MapPin size={16} /> מצב נוכחי
           </button>
           <button 
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'requests' ? 600 : 400, color: activeTab === 'requests' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'requests' ? '3px solid var(--accent)' : '3px solid transparent' }}
+            className={activeTab === 'requests' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'requests' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('requests')}
           >
             <Send size={16} /> פניות
           </button>
           <button 
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'forms' ? 600 : 400, color: activeTab === 'forms' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'forms' ? '3px solid var(--accent)' : '3px solid transparent' }}
+            className={activeTab === 'forms' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'forms' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('forms')}
           >
             <FileText size={16} /> שאלונים
           </button>
           <button 
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'guard' ? 600 : 400, color: activeTab === 'guard' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'guard' ? '3px solid var(--accent)' : '3px solid transparent' }}
+            className={activeTab === 'guard' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'guard' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('guard')}
           >
             <Shield size={16} /> שמירות
           </button>
           <button 
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', fontWeight: activeTab === 'messages' ? 600 : 400, color: activeTab === 'messages' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'messages' ? '3px solid var(--accent)' : '3px solid transparent', position: 'relative' }}
+            className={activeTab === 'messages' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'messages' ? 'var(--accent)' : 'var(--text-muted)', position: 'relative' }}
             onClick={() => setActiveTab('messages')}
           >
-            <Bell size={16} /> לוח מודעות
+            <Bell size={16} /> מודעות
             {messages.length > 0 && (
               <span style={{ position: 'absolute', top: -3, right: -10, background: 'var(--danger)', color: 'white', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: 10 }}>
                 {messages.length}
@@ -474,10 +479,10 @@ export default function SoldierPortalPage() {
                   <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(200, 168, 75, 0.4)', border: '1px solid var(--accent)' }} /> <span>נבחר לבקשה</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(41, 128, 185, 0.4)' }} /> <span>סגל: כניסה</span>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(41, 128, 185, 0.4)' }} /> <span>כניסה ללבנון</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(74, 103, 65, 0.4)' }} /> <span>סגל: בית</span>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(74, 103, 65, 0.4)' }} /> <span>בית / התרעננות</span>
                 </div>
               </div>
             </div>

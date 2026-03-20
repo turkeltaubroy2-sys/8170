@@ -603,15 +603,28 @@ tr:hover td {
 
 @media (max-width: 600px) {
   .tab-menu {
-    gap: 12px;
-    justify-content: center;
-    padding: 0 4px 10px;
-    flex-wrap: wrap; /* Wrap to ensure visibility */
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px !important;
+    padding: 0 0 10px !important;
+    border-bottom: none !important;
   }
   
-  .tab-menu button {
-    font-size: 0.9rem !important;
-    padding-bottom: 8px !important;
+  .tab-menu button, .tab-menu .tab-item {
+    font-size: 0.8rem !important;
+    padding: 8px 4px !important;
+    background: var(--bg-surface) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    text-align: center !important;
+    min-height: 44px;
+  }
+
+  .tab-menu button[style*="var(--accent)"], .tab-menu .tab-item[style*="var(--accent)"] {
+     border-color: var(--accent) !important;
+     background: rgba(212, 193, 143, 0.1) !important;
   }
 }
 
