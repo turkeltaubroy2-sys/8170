@@ -7,6 +7,7 @@ import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell, Calendar, 
 import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
+import { Button } from '@/components/ui/Button';
 
 const STATUSES = ['בבית', 'עורף', 'בפנים'];
 const HEALTH = ['תקין', 'חלש', 'פצוע', 'בבית חולים', 'פטור רפואי'];
@@ -60,6 +61,7 @@ export default function SoldierPortalPage() {
     personal_notes: '',
     equipment: {} as Record<string, any>
   });
+  const [isEditingEquip, setIsEditingEquip] = useState(true);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [rotationNote, setRotationNote] = useState('');
 
@@ -105,6 +107,9 @@ export default function SoldierPortalPage() {
         personal_notes: portalData.personal_notes || '',
         equipment: portalData.equipment || {}
       });
+      if (portalData.equipment && Object.keys(portalData.equipment).length > 0) {
+        setIsEditingEquip(false);
+      }
     } else {
       // Create portal entry
       await supabase.from('soldier_portals').insert({ soldier_id: soldierData.id, status: 'בבית', health_declaration: 'תקין' });
@@ -136,6 +141,7 @@ export default function SoldierPortalPage() {
       equipment: form.equipment,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'soldier_id' });
+    setIsEditingEquip(false);
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -559,38 +565,72 @@ export default function SoldierPortalPage() {
 
             {/* Equipment */}
             <div className="card" style={{ marginBottom: 16 }}>
-              <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Backpack size={18} className="text-muted" /> רשימת ציוד ופורמט החתמה
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Backpack size={18} className="text-muted" /> רשימת ציוד ופורמט החתמה
+                </h3>
+                {!isEditingEquip && (
+                  <Button variant="secondary" size="sm" onClick={() => setIsEditingEquip(true)}>
+                    ✏️ ערוך רשימה
+                  </Button>
+                )}
+              </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px 20px', background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
-                {EQUIPMENT_ITEMS.map(item => (
-                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{item.label}</span>
-                    {item.type === 'boolean' ? (
-                      <input 
-                        type="checkbox" 
-                        checked={!!form.equipment[item.id]} 
-                        onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.checked } }))}
-                        style={{ width: 18, height: 18, accentColor: 'var(--accent)' }}
-                      />
-                    ) : (
-                      <select 
-                         value={form.equipment[item.id] || 'לא'} 
-                         onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.value } }))}
-                         style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', fontSize: '0.75rem', color: 'var(--text)' }}
-                      >
-                        {item.options?.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    )}
+              {isEditingEquip ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px 20px', background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                    {EQUIPMENT_ITEMS.map(item => (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{item.label}</span>
+                        {item.type === 'boolean' ? (
+                          <input 
+                            type="checkbox" 
+                            checked={!!form.equipment[item.id]} 
+                            onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.checked } }))}
+                            style={{ width: 18, height: 18, accentColor: 'var(--accent)' }}
+                          />
+                        ) : (
+                          <select 
+                             value={form.equipment[item.id] || 'לא'} 
+                             onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.value } }))}
+                             style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', fontSize: '0.75rem', color: 'var(--text)' }}
+                          >
+                            {item.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
-                  {saving ? '⏳ שומר...' : '💾 שמור רשימת ציוד'}
-                </button>
-              </div>
+                  <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                    <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
+                      {saving ? '⏳ שומר...' : '💾 שמור רשימת ציוד'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {EQUIPMENT_ITEMS.map(item => {
+                      const val = form.equipment[item.id];
+                      const has = item.type === 'boolean' ? !!val : (val && val !== 'לא');
+                      if (!has) return null;
+                      return (
+                        <div key={item.id} style={{ fontSize: '0.8rem', display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <span style={{ color: 'var(--primary)' }}>V</span>
+                          <span style={{ color: 'var(--text-dim)' }}>{item.label}</span>
+                          {item.type === 'select' && <span style={{ fontWeight: 700 }}>({val})</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {EQUIPMENT_ITEMS.every(i => {
+                    const v = form.equipment[i.id];
+                    return i.type === 'boolean' ? !v : (!v || v === 'לא');
+                  }) && (
+                    <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem' }}>טרם הוזן ציוד</p>
+                  )}
+                </div>
+              )}
             </div>
 
               {/* Notes */}
