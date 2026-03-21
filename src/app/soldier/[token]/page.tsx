@@ -11,6 +11,37 @@ import SoldierForms from '@/components/SoldierForms';
 const STATUSES = ['בבית', 'עורף', 'בפנים'];
 const HEALTH = ['תקין', 'חלש', 'פצוע', 'בבית חולים', 'פטור רפואי'];
 
+const EQUIPMENT_ITEMS = [
+  { id: 'massa_90l', label: 'מנשא 90 ליטר', type: 'boolean' },
+  { id: 'shak_hafatzi', label: 'שק חפצים', type: 'boolean' },
+  { id: 'mechanes_dagmach', label: "מכנס דגמ''ח", type: 'boolean' },
+  { id: 'chultzat_dagmach', label: 'חולצות דגמ"ח', type: 'boolean' },
+  { id: 'shak_sheina', label: 'שק שינה', type: 'boolean' },
+  { id: 'kova_avoda', label: 'כובע עבודה', type: 'boolean' },
+  { id: 'kfafot_nomex', label: 'כפפות נומקס', type: 'boolean' },
+  { id: 'hagorat_avoda', label: 'חגורת עבודה', type: 'boolean' },
+  { id: 'afod_magen', label: 'אפוד מגן נגד רסיסים', type: 'boolean' },
+  { id: 'kasda', label: 'קסדה', type: 'select', options: ['טקטית', 'רגילה', 'לא'] },
+  { id: 'vest', label: 'ווסט', type: 'select', options: ['רגיל', 'נגב', 'חובש', 'מטול', 'לא'] },
+  { id: 'luach_kerami_kidmi', label: 'לוח קרמי קדמי', type: 'boolean' },
+  { id: 'luach_kerami_achori', label: 'לוח קרמי אחורי', type: 'boolean' },
+  { id: 'luach_kerami_shachor', label: 'לוח קרמי שחור', type: 'boolean' },
+  { id: 'panas_rosh', label: 'פנס ראש מנצנץ', type: 'boolean' },
+  { id: 'mechal_mayim_3l', label: 'מיכל מים 3 ליטר', type: 'boolean' },
+  { id: 'reshet_hasva_2x3', label: 'רשת הסוואה 2*3 אנט', type: 'boolean' },
+  { id: 'mitznefet', label: 'מצנפת לקסדה', type: 'boolean' },
+  { id: 'magen_birkayim', label: 'מגני ברכיים', type: 'boolean' },
+  { id: 'et_tachferut', label: 'את תחפרות', type: 'boolean' },
+  { id: 'mishkafayim', label: 'משקפי שומר אח"י', type: 'boolean' },
+  { id: 'chevel_ishi', label: 'חבל אישי עם אנקול', type: 'boolean' },
+  { id: 'retzua', label: 'רצועה לנשק', type: 'boolean' },
+  { id: 'machsaniyot', label: 'מחסניות', type: 'boolean' },
+  { id: 'mashmenet', label: 'משמנת', type: 'boolean' },
+  { id: 'mivreshet', label: 'מברשת ניקוי', type: 'boolean' },
+  { id: 'choter', label: 'חוטר', type: 'boolean' },
+  { id: 'erkat_niqquoy', label: 'ערכת כלי ניקוי', type: 'boolean' },
+];
+
 export default function SoldierPortalPage() {
   const params = useParams();
   const token = params.token as string;
@@ -26,8 +57,8 @@ export default function SoldierPortalPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
     health_declaration: 'תקין',
-    equipment_notes: '',
     personal_notes: '',
+    equipment: {} as Record<string, any>
   });
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [rotationNote, setRotationNote] = useState('');
@@ -71,8 +102,8 @@ export default function SoldierPortalPage() {
       setPortal(portalData);
       setForm({
         health_declaration: portalData.health_declaration || 'תקין',
-        equipment_notes: portalData.equipment_notes || '',
         personal_notes: portalData.personal_notes || '',
+        equipment: portalData.equipment || {}
       });
     } else {
       // Create portal entry
@@ -100,7 +131,9 @@ export default function SoldierPortalPage() {
     setSaving(true);
     await supabase.from('soldier_portals').upsert({
       soldier_id: soldier.id,
-      ...form,
+      health_declaration: form.health_declaration,
+      personal_notes: form.personal_notes,
+      equipment: form.equipment,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'soldier_id' });
     setSaving(false);
@@ -525,13 +558,35 @@ export default function SoldierPortalPage() {
 
 
             {/* Equipment */}
-              <div className="card" style={{ marginBottom: 16 }}>
-                <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Backpack size={18} className="text-muted" /> ציוד מונפק
-                </h3>
-                <textarea className="form-textarea" value={form.equipment_notes} onChange={e => setForm(f => ({ ...f, equipment_notes: e.target.value }))}
-                  placeholder="הערות לתצוגה בסגל..." rows={3} />
+            <div className="card" style={{ marginBottom: 16 }}>
+              <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Backpack size={18} className="text-muted" /> רשימת ציוד ופורמט החתמה
+              </h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px 20px', background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                {EQUIPMENT_ITEMS.map(item => (
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{item.label}</span>
+                    {item.type === 'boolean' ? (
+                      <input 
+                        type="checkbox" 
+                        checked={!!form.equipment[item.id]} 
+                        onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.checked } }))}
+                        style={{ width: 18, height: 18, accentColor: 'var(--accent)' }}
+                      />
+                    ) : (
+                      <select 
+                         value={form.equipment[item.id] || 'לא'} 
+                         onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.value } }))}
+                         style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', fontSize: '0.75rem', color: 'var(--text)' }}
+                      >
+                        {item.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    )}
+                  </div>
+                ))}
               </div>
+            </div>
 
               {/* Notes */}
               <div className="card" style={{ marginBottom: 24 }}>

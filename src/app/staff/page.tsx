@@ -30,11 +30,42 @@ type SoldierWithPortal = {
   soldier_portals?: {
     status: string;
     health_declaration: string;
-    equipment_notes: string;
+    equipment?: Record<string, any>;
     personal_notes: string;
     updated_at: string;
   };
 };
+
+const EQUIPMENT_ITEMS = [
+  { id: 'massa_90l', label: 'מנשא 90 ליטר', type: 'boolean' },
+  { id: 'shak_hafatzi', label: 'שק חפצים', type: 'boolean' },
+  { id: 'mechanes_dagmach', label: "מכנס דגמ''ח", type: 'boolean' },
+  { id: 'chultzat_dagmach', label: 'חולצות דגמ"ח', type: 'boolean' },
+  { id: 'shak_sheina', label: 'שק שינה', type: 'boolean' },
+  { id: 'kova_avoda', label: 'כובע עבודה', type: 'boolean' },
+  { id: 'kfafot_nomex', label: 'כפפות נומקס', type: 'boolean' },
+  { id: 'hagorat_avoda', label: 'חגורת עבודה', type: 'boolean' },
+  { id: 'afod_magen', label: 'אפוד מגן נגד רסיסים', type: 'boolean' },
+  { id: 'kasda', label: 'קסדה', type: 'select', options: ['טקטית', 'רגילה', 'לא'] },
+  { id: 'vest', label: 'ווסט', type: 'select', options: ['רגיל', 'נגב', 'חובש', 'מטול', 'לא'] },
+  { id: 'luach_kerami_kidmi', label: 'לוח קרמי קדמי', type: 'boolean' },
+  { id: 'luach_kerami_achori', label: 'לוח קרמי אחורי', type: 'boolean' },
+  { id: 'luach_kerami_shachor', label: 'לוח קרמי שחור', type: 'boolean' },
+  { id: 'panas_rosh', label: 'פנס ראש מנצנץ', type: 'boolean' },
+  { id: 'mechal_mayim_3l', label: 'מיכל מים 3 ליטר', type: 'boolean' },
+  { id: 'reshet_hasva_2x3', label: 'רשת הסוואה 2*3 אנט', type: 'boolean' },
+  { id: 'mitznefet', label: 'מצנפת לקסדה', type: 'boolean' },
+  { id: 'magen_birkayim', label: 'מגני ברכיים', type: 'boolean' },
+  { id: 'et_tachferut', label: 'את תחפרות', type: 'boolean' },
+  { id: 'mishkafayim', label: 'משקפי שומר אח"י', type: 'boolean' },
+  { id: 'chevel_ishi', label: 'חבל אישי עם אנקול', type: 'boolean' },
+  { id: 'retzua', label: 'רצועה לנשק', type: 'boolean' },
+  { id: 'machsaniyot', label: 'מחסניות', type: 'boolean' },
+  { id: 'mashmenet', label: 'משמנת', type: 'boolean' },
+  { id: 'mivreshet', label: 'מברשת ניקוי', type: 'boolean' },
+  { id: 'choter', label: 'חוטר', type: 'boolean' },
+  { id: 'erkat_niqquoy', label: 'ערכת כלי ניקוי', type: 'boolean' },
+];
 
 const statusColors: Record<string, string> = {
   'בבית': '#27ae60',
@@ -80,7 +111,7 @@ export default function StaffPage() {
           ...s,
           soldier_portals: s.soldier_portals 
             ? { ...s.soldier_portals, status: newStatus, updated_at: new Date().toISOString() }
-            : { status: newStatus, health_declaration: 'תקין', equipment_notes: '', personal_notes: '', updated_at: new Date().toISOString() }
+            : { status: newStatus, health_declaration: 'תקין', equipment: {}, personal_notes: '', updated_at: new Date().toISOString() }
         };
       }
       return s;
@@ -91,7 +122,7 @@ export default function StaffPage() {
     setRefreshing(true);
     const [depsRes, soldiersRes] = await Promise.all([
       supabase.from('departments').select('id, name, icon').order('order'),
-      supabase.from('soldiers').select('*, departments(name,icon), soldier_portals(status,health_declaration,equipment_notes,personal_notes,updated_at)').order('full_name'),
+      supabase.from('soldiers').select('*, departments(name,icon), soldier_portals(status,health_declaration,equipment,personal_notes,updated_at)').order('full_name'),
     ]);
     setDepartments(depsRes.data || []);
     setSoldiers(soldiersRes.data || []);
@@ -125,7 +156,7 @@ export default function StaffPage() {
   const formatTime = (dt?: string) => dt ? new Date(dt).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
   const exportCSV = () => {
-    const headers = ['שם מלא', 'מחלקה', 'טלפון', 'סטטוס', 'הצהרת בריאות', 'פק"לים', 'הערות ציוד', 'הערות אישיות', 'עדכון אחרון'];
+    const headers = ['שם מלא', 'מחלקה', 'טלפון', 'סטטוס', 'הצהרת בריאות', 'פק"לים', ...EQUIPMENT_ITEMS.map(i => i.label), 'הערות אישיות', 'עדכון אחרון'];
     const rows = filtered.map(s => [
       s.full_name || '',
       s.departments?.name || '',
@@ -133,7 +164,11 @@ export default function StaffPage() {
       s.soldier_portals?.status || 'לא עדכן',
       s.soldier_portals?.health_declaration || '',
       (s.pakalim || []).join(', '),
-      s.soldier_portals?.equipment_notes || '',
+      ...EQUIPMENT_ITEMS.map(i => {
+        const val = s.soldier_portals?.equipment?.[i.id];
+        if (i.type === 'boolean') return val ? 'V' : 'X';
+        return val || 'לא';
+      }),
       s.soldier_portals?.personal_notes || '',
       formatTime(s.soldier_portals?.updated_at)
     ]);
@@ -264,7 +299,7 @@ export default function StaffPage() {
                         <th>סטטוס</th>
                         <th>בריאות</th>
                         <th>פק&quot;לים</th>
-                        <th>ציוד / הערות</th>
+                        <th>כשירות ציוד</th>
                         <th>עדכון אחרון</th>
                         <th>לינק</th>
                       </tr>
@@ -333,12 +368,20 @@ export default function StaffPage() {
                               {(!s.pakalim || s.pakalim.length === 0) && <span style={{color: 'var(--text-muted)'}}>—</span>}
                             </div>
                           </td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: 200 }}>
-                            {s.soldier_portals?.equipment_notes ? (
-                              <span style={{ color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={12} /> {s.soldier_portals.equipment_notes.slice(0, 60)}</span>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {s.soldier_portals?.equipment ? (
+                              (() => {
+                                const count = EQUIPMENT_ITEMS.filter(i => {
+                                  const v = s.soldier_portals?.equipment?.[i.id];
+                                  return i.type === 'boolean' ? !!v : (v && v !== 'לא');
+                                }).length;
+                                const total = EQUIPMENT_ITEMS.length;
+                                const pct = Math.round((count / total) * 100);
+                                return <Badge style={{ background: pct > 80 ? '#27ae6022' : '#f39c1222', color: pct > 80 ? '#27ae60' : '#f39c12' }}>{pct}% חתום ({count}/{total})</Badge>;
+                              })()
                             ) : '—'}
                             {s.soldier_portals?.personal_notes && (
-                              <p style={{ marginTop: 2, color: 'var(--text-dim)' }}>{s.soldier_portals.personal_notes.slice(0, 40)}{s.soldier_portals.personal_notes.length > 40 ? '...' : ''}</p>
+                              <p style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--text-dim)' }}>💬 {s.soldier_portals.personal_notes.slice(0, 30)}</p>
                             )}
                           </td>
                           <td style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>{formatTime(s.soldier_portals?.updated_at)}</td>
@@ -394,9 +437,23 @@ export default function StaffPage() {
                             ]}
                           />
                           {s.soldier_portals ? (
-                            <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
                               <span style={{ fontSize: '0.75rem', color: healthColors[s.soldier_portals.health_declaration] || 'var(--text-muted)' }}>🏥 {s.soldier_portals.health_declaration}</span>
-                              {s.soldier_portals.equipment_notes && <span style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>⚠️ {s.soldier_portals.equipment_notes.slice(0,50)}</span>}
+                              <div style={{ background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 8, marginTop: 2 }}>
+                                {(() => {
+                                  const count = EQUIPMENT_ITEMS.filter(i => {
+                                    const v = s.soldier_portals?.equipment?.[i.id];
+                                    return i.type === 'boolean' ? !!v : (v && v !== 'לא');
+                                  }).length;
+                                  const total = EQUIPMENT_ITEMS.length;
+                                  return (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>ציוד חתום:</span>
+                                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: count === total ? 'var(--primary)' : 'var(--text)' }}>{count}/{total}</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
                             </div>
                           ) : <Badge variant="gray" style={{width: 'fit-content', marginTop: 6}}>לא עדכן</Badge>}
                       </div>
