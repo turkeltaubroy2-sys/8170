@@ -64,6 +64,8 @@ export default function SoldierPortalPage() {
   const [isEditingEquip, setIsEditingEquip] = useState(true);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [rotationNote, setRotationNote] = useState('');
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
 
   const fetchPortal = useCallback(async () => {
     const { data: soldierData } = await supabase
@@ -479,24 +481,47 @@ export default function SoldierPortalPage() {
             {/* Lebanon Rotation Request Calendar */}
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Calendar size={18} className="text-muted" /> בקשות מיוחדות - סבב כניסות ויציאות לבנון
+                <Calendar size={18} className="text-muted" /> בקשות יציאה סבב לבנון
               </h3>
 
               <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>סמן ימים בלוח להגשת בקשת יציאה מיוחדת:</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '0 8px' }}>
+                  <button 
+                    onClick={() => {
+                      if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1); }
+                      else setViewMonth(v => v - 1);
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >
+                    ◀
+                  </button>
+                  <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>
+                    {new Intl.DateTimeFormat('he-IL', { month: 'long', year: 'numeric' }).format(new Date(viewYear, viewMonth))}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (viewMonth === 11) { setViewMonth(0); setViewYear(v => v + 1); }
+                      else setViewMonth(v => v + 1);
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >
+                    ▶
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>סמן ימים בלוח להגשת בקשת יציאה:</p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
                   {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map(d => (
                     <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-dim)', paddingBottom: 4 }}>{d}</div>
                   ))}
 
-                  {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                  {Array.from({ length: new Date(viewYear, viewMonth, 1).getDay() }).map((_, i) => (
                     <div key={`empty-${i}`} />
                   ))}
 
-                  {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                  {Array.from({ length: new Date(viewYear, viewMonth + 1, 0).getDate() }).map((_, i) => {
                     const day = i + 1;
-                    const dateStr = new Date(new Date().getFullYear(), new Date().getMonth(), day).toISOString().split('T')[0];
+                    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const isSelected = selectedDates.includes(dateStr);
                     const rotation = missions.find(m => m.title === 'סבב לבנון' && m.start_time.startsWith(dateStr));
                     const isStaffColored = !!rotation;
@@ -545,18 +570,18 @@ export default function SoldierPortalPage() {
                     <button
                       className="btn btn-primary"
                       style={{ width: '100%', justifyContent: 'center' }}
-                      disabled={saving}
+                      disabled={saving || !rotationNote.trim()}
                       onClick={async () => {
-                        if (!soldier) return;
+                        if (!soldier || !rotationNote.trim()) return;
                         setSaving(true);
                         const sortedDates = [...selectedDates].sort().map(d => new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })).join(', ');
 
                         await supabase.from('requests').insert({
                           soldier_id: soldier.id,
-                          title: 'בקשת יציאה - סבב לבנון',
+                          title: 'בקשות יציאה סבב לבנון',
                           type: 'rotation',
                           status: 'pending',
-                          description: `תאריכים: ${sortedDates}\n\nהערות: ${rotationNote}`
+                          description: `תאריכים: ${sortedDates}\n\nסיבה: ${rotationNote}`
                         });
 
                         setSaving(false);
