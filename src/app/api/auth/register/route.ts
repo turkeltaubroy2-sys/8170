@@ -8,22 +8,41 @@ import fs from 'fs';
 // This runs on the Node side, so we can securely parse the Excel file.
 export async function POST(request: Request) {
   try {
-    const { personal_number, password, photo_url } = await request.json();
-    console.log('Registration attempt for P.N:', personal_number);
+    let { personal_number, password, photo_url } = await request.json();
+    
+    // Normalize personal number: trim and ensure it's a string
+    personal_number = personal_number ? String(personal_number).trim() : null;
+    console.log('Registration attempt for P.N (normalized):', personal_number);
 
     if (!personal_number || !password) {
       return NextResponse.json({ error: 'חסרים נתונים' }, { status: 400 });
     }
 
-    // 1. Check if the soldier is already registered
+    // 1. Check if the soldier is already registered (exists AND has a password)
     const { data: existingUser } = await supabase
       .from('soldiers')
-      .select('id')
+      .select('id, password')
       .eq('personal_number', personal_number)
       .maybeSingle();
 
-    if (existingUser) {
-      return NextResponse.json({ error: 'משתמש זה כבר רשום במערכת' }, { status: 400 });
+    console.log('Existing user check result:', existingUser ? `FOUND (id: ${existingUser.id}, password: ${JSON.stringify(existingUser.password)}, type: ${typeof existingUser.password})` : 'NOT FOUND');
+
+    // EXTREMELY DETAILED CHECK - Only block if they have a truthy password that is not the string "null"
+    const hasActualPassword = existingUser && existingUser.password && 
+                              String(existingUser.password).trim() !== '' && 
+                              String(existingUser.password).trim() !== 'null';
+
+    if (hasActualPassword) {
+      console.log('User already has a valid password set. Blocking registration.');
+      return NextResponse.json({ 
+        error: `משתמש זה כבר רשום במערכת (קוד: REG-CONF-01, מ.א: ${personal_number})`,
+        debug: { 
+          hasExisting: !!existingUser, 
+          pwValue: existingUser.password, 
+          pwType: typeof existingUser.password,
+          hasActualPassword 
+        }
+      }, { status: 400 });
     }
 
     // 2. Read the Excel file to find the soldier
@@ -94,10 +113,11 @@ export async function POST(request: Request) {
 
     const departmentId = department ? department.id : null;
 
-    // 4. Create the user in the database
-    const { data: newSoldier, error: insertError } = await supabase
+    // 4. Create or update the user in the database
+    // We use upsert with onConflict to handle soldiers already in the DB from the Alfon sync
+    const { data: newSoldier, error: upsertError } = await supabase
       .from('soldiers')
-      .insert({
+      .upsert({
         personal_number: String(personal_number),
         password: password,
         full_name: fullName,
@@ -105,15 +125,17 @@ export async function POST(request: Request) {
         role: role,
         department_id: departmentId,
         photo_url: photo_url || null,
-        unique_token: crypto.randomUUID()
-      })
+        // Only provide a new token if they don't have one (handled by DB default if we omit it for new, 
+        // but here we check if they already exist)
+        ...(existingUser ? {} : { unique_token: crypto.randomUUID() })
+      }, { onConflict: 'personal_number' })
       .select()
       .single();
 
     console.log('Register successful for:', newSoldier?.full_name);
 
-    if (insertError) {
-      console.error('Error inserting soldier:', insertError);
+    if (upsertError) {
+      console.error('Error inserting soldier:', upsertError);
       return NextResponse.json({ error: 'שגיאה בשמירת פרטי החייל במסד הנתונים' }, { status: 500 });
     }
 

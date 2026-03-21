@@ -9,7 +9,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    let { username, password } = await request.json();
+    username = username ? String(username).trim() : '';
 
     if (!username || !password) {
       return NextResponse.json({ error: 'חסרים פרטי התחברות' }, { status: 400 });
