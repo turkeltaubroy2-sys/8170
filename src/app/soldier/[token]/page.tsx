@@ -53,7 +53,7 @@ export default function SoldierPortalPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'messages'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'equipment' | 'messages'>('status');
   const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
@@ -120,8 +120,10 @@ export default function SoldierPortalPage() {
         personal_notes: portalData.personal_notes || '',
         equipment: parsedEquip
       });
-      if (portalData.equipment && Object.keys(portalData.equipment).length > 0) {
+      if (parsedEquip && Object.keys(parsedEquip).length > 0) {
         setIsEditingEquip(false);
+      } else {
+        setIsEditingEquip(true);
       }
     } else {
       // Create portal entry
@@ -303,6 +305,13 @@ export default function SoldierPortalPage() {
             onClick={() => setActiveTab('guard')}
           >
             <Shield size={16} /> שמירות
+          </button>
+          <button
+            className={activeTab === 'equipment' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'equipment' ? 'var(--accent)' : 'var(--text-muted)' }}
+            onClick={() => setActiveTab('equipment')}
+          >
+            <Backpack size={16} /> ציוד
           </button>
           <button
             className={activeTab === 'messages' ? 'active' : ''}
@@ -600,76 +609,6 @@ export default function SoldierPortalPage() {
             </div>
 
 
-            {/* Equipment */}
-            <div className="card" style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 style={{ fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Backpack size={18} className="text-muted" /> רשימת ציוד ופורמט החתמה
-                </h3>
-                {!isEditingEquip && (
-                  <Button variant="secondary" size="sm" onClick={() => setIsEditingEquip(true)}>
-                    ✏️ ערוך רשימה
-                  </Button>
-                )}
-              </div>
-              
-              {isEditingEquip ? (
-                <>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px 20px', background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
-                    {EQUIPMENT_ITEMS.map(item => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{item.label}</span>
-                        {item.type === 'boolean' ? (
-                          <input 
-                            type="checkbox" 
-                            checked={!!form.equipment[item.id]} 
-                            onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.checked } }))}
-                            style={{ width: 18, height: 18, accentColor: 'var(--accent)' }}
-                          />
-                        ) : (
-                          <select 
-                             value={form.equipment[item.id] || 'לא'} 
-                             onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.value } }))}
-                             style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', fontSize: '0.75rem', color: 'var(--text)' }}
-                          >
-                            {item.options?.map(o => <option key={o} value={o}>{o}</option>)}
-                          </select>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                    <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
-                      {saving ? '⏳ שומר...' : '💾 שמור רשימת ציוד'}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {EQUIPMENT_ITEMS.map(item => {
-                      const val = form.equipment[item.id];
-                      const has = item.type === 'boolean' ? !!val : (val && val !== 'לא');
-                      if (!has) return null;
-                      return (
-                        <div key={item.id} style={{ fontSize: '0.8rem', display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <span style={{ color: 'var(--primary)' }}>V</span>
-                          <span style={{ color: 'var(--text-dim)' }}>{item.label}</span>
-                          {item.type === 'select' && <span style={{ fontWeight: 700 }}>({val})</span>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {EQUIPMENT_ITEMS.every(i => {
-                    const v = form.equipment[i.id];
-                    return i.type === 'boolean' ? !v : (!v || v === 'לא');
-                  }) && (
-                    <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem' }}>טרם הוזן ציוד</p>
-                  )}
-                </div>
-              )}
-            </div>
-
               {/* Notes */}
               <div className="card" style={{ marginBottom: 24 }}>
                 <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -689,7 +628,85 @@ export default function SoldierPortalPage() {
               </p>
             </>
         )}
+
+        {activeTab === 'equipment' && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Backpack size={18} className="text-muted" /> רשימת ציוד ופורמט החתמה
+              </h3>
+              {!isEditingEquip && (
+                <Button variant="secondary" size="sm" onClick={() => setIsEditingEquip(true)}>
+                  ✏️ עריכה
+                </Button>
+              )}
+            </div>
+
+            {saved && (
+              <div className="alert alert-success" style={{ marginBottom: 16, textAlign: 'center' }}>
+                ✅ הציוד נשמר בהצלחה
+              </div>
+            )}
+            
+            {isEditingEquip ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px 20px', background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                  {EQUIPMENT_ITEMS.map(item => (
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{item.label}</span>
+                      {item.type === 'boolean' ? (
+                        <input 
+                          type="checkbox" 
+                          checked={!!form.equipment[item.id]} 
+                          onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.checked } }))}
+                          style={{ width: 18, height: 18, accentColor: 'var(--accent)' }}
+                        />
+                      ) : (
+                        <select 
+                           value={form.equipment[item.id] || 'לא'} 
+                           onChange={e => setForm(f => ({ ...f, equipment: { ...f.equipment, [item.id]: e.target.value } }))}
+                           style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 4px', fontSize: '0.75rem', color: 'var(--text)' }}
+                        >
+                          {item.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                  <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
+                    {saving ? '⏳ שומר...' : '💾 שמור רשימת ציוד'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {EQUIPMENT_ITEMS.map(item => {
+                    const val = form.equipment[item.id];
+                    const has = item.type === 'boolean' ? !!val : (val && val !== 'לא');
+                    if (!has) return null;
+                    return (
+                      <div key={item.id} style={{ fontSize: '0.8rem', display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={{ color: 'var(--primary)' }}>V</span>
+                        <span style={{ color: 'var(--text-dim)' }}>{item.label}</span>
+                        {item.type === 'select' && <span style={{ fontWeight: 700 }}>({val as string})</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {EQUIPMENT_ITEMS.every(i => {
+                  const v = form.equipment[i.id];
+                  return i.type === 'boolean' ? !v : (!v || v === 'לא');
+                }) && (
+                  <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem' }}>טרם הוזן ציוד</p>
+                )}
+              </div>
+            )}
           </div>
+        )}
+
       </div>
-      );
+    </div>
+  );
 }
