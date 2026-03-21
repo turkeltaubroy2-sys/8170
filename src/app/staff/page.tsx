@@ -87,6 +87,8 @@ export default function StaffPage() {
   const [view, setView] = useState<'table' | 'cards'>('cards');
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
+  const [selectedSoldier, setSelectedSoldier] = useState<SoldierWithPortal | null>(null);
+  const [showEquipModal, setShowEquipModal] = useState(false);
 
   const updateStatus = async (soldierId: string, newStatus: string) => {
     // Check if portal exists, if not create one or handle accordingly
@@ -377,7 +379,14 @@ export default function StaffPage() {
                                 }).length;
                                 const total = EQUIPMENT_ITEMS.length;
                                 const pct = Math.round((count / total) * 100);
-                                return <Badge style={{ background: pct > 80 ? '#27ae6022' : '#f39c1222', color: pct > 80 ? '#27ae60' : '#f39c12' }}>{pct}% חתום ({count}/{total})</Badge>;
+                                return (
+                                  <button 
+                                    onClick={() => { setSelectedSoldier(s); setShowEquipModal(true); }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                  >
+                                    <Badge style={{ background: pct > 80 ? '#27ae6022' : '#f39c1222', color: pct > 80 ? '#27ae60' : '#f39c12' }}>{pct}% ({count}/{total}) 👁️</Badge>
+                                  </button>
+                                );
                               })()
                             ) : '—'}
                             {s.soldier_portals?.personal_notes && (
@@ -447,10 +456,15 @@ export default function StaffPage() {
                                   }).length;
                                   const total = EQUIPMENT_ITEMS.length;
                                   return (
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>ציוד חתום:</span>
-                                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: count === total ? 'var(--primary)' : 'var(--text)' }}>{count}/{total}</span>
-                                    </div>
+                                    <button 
+                                      onClick={() => { setSelectedSoldier(s); setShowEquipModal(true); }}
+                                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                    >
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>ציוד חתום:</span>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: count === total ? 'var(--primary)' : 'var(--text)' }}>{count}/{total} 👁️</span>
+                                      </div>
+                                    </button>
                                   );
                                 })()}
                               </div>
@@ -470,6 +484,40 @@ export default function StaffPage() {
             </>
           )}
         </div>
+
+        {/* Equipment Modal */}
+        {showEquipModal && selectedSoldier && (
+          <div style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', 
+            zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 
+          }}>
+            <div className="card" style={{ maxWidth: 500, width: '100%', maxHeight: '80vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ margin: 0 }}>📦 פירוט ציוד - {selectedSoldier.full_name}</h3>
+                <Button variant="secondary" size="sm" onClick={() => setShowEquipModal(false)}>סגור</Button>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {EQUIPMENT_ITEMS.map(i => {
+                  const val = selectedSoldier.soldier_portals?.equipment?.[i.id];
+                  const has = i.type === 'boolean' ? !!val : (val && val !== 'לא');
+                  return (
+                    <div key={i.id} style={{ 
+                      padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8,
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      border: `1px solid ${has ? 'var(--primary)44' : 'transparent'}`
+                    }}>
+                      <span style={{ fontSize: '0.85rem' }}>{i.label}</span>
+                      <span style={{ fontSize: '0.9rem', color: has ? 'var(--primary)' : 'var(--text-dim)' }}>
+                        {i.type === 'boolean' ? (val ? '✅' : '❌') : (val || '❌')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

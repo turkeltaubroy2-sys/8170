@@ -586,6 +586,11 @@ export default function SoldierPortalPage() {
                   </div>
                 ))}
               </div>
+              <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center' }}>
+                  {saving ? '⏳ שומר...' : '💾 שמור רשימת ציוד'}
+                </button>
+              </div>
             </div>
 
               {/* Notes */}
