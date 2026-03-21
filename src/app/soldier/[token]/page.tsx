@@ -8,14 +8,14 @@ import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierForms from '@/components/SoldierForms';
 
-const STATUSES = ['בבית', 'בדרך', 'בפלוגה', 'בחופש', 'מחכה לציוד', 'אחר'];
+const STATUSES = ['בבית', 'עורף', 'בפנים'];
 const HEALTH = ['תקין', 'חלש', 'פצוע', 'בבית חולים', 'פטור רפואי'];
 
 export default function SoldierPortalPage() {
   const params = useParams();
   const token = params.token as string;
   const [soldier, setSoldier] = useState<Soldier | null>(null);
-  const [, setPortal] = useState<SoldierPortal | null>(null);
+  const [portal, setPortal] = useState<SoldierPortal | null>(null);
   const [missions, setMissions] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,7 +25,6 @@ export default function SoldierPortalPage() {
   const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
-    status: 'בבית',
     health_declaration: 'תקין',
     equipment_notes: '',
     personal_notes: '',
@@ -48,7 +47,7 @@ export default function SoldierPortalPage() {
       .eq('commander_id', soldierData.id)
       .neq('status', 'completed')
       .order('start_time', { ascending: true });
-    
+
     if (missionsData) {
       setMissions(missionsData);
     }
@@ -71,7 +70,6 @@ export default function SoldierPortalPage() {
     if (portalData) {
       setPortal(portalData);
       setForm({
-        status: portalData.status || 'בבית',
         health_declaration: portalData.health_declaration || 'תקין',
         equipment_notes: portalData.equipment_notes || '',
         personal_notes: portalData.personal_notes || '',
@@ -83,7 +81,7 @@ export default function SoldierPortalPage() {
     setLoading(false);
   }, [token]);
 
-  useEffect(() => { 
+  useEffect(() => {
     const load = async () => {
       if (token) await fetchPortal();
     };
@@ -165,7 +163,7 @@ export default function SoldierPortalPage() {
   );
 
   const statusColors: Record<string, string> = {
-    'בבית': '#2980b9', 'בדרך': '#f39c12', 'בפלוגה': '#27ae60', 'בחופש': '#8e44ad', 'מחכה לציוד': '#c0392b', 'אחר': '#7f8c8d'
+    'בבית': '#27ae60', 'עורף': '#2980b9', 'בפנים': '#c0392b'
   };
 
   return (
@@ -173,24 +171,24 @@ export default function SoldierPortalPage() {
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ position: 'relative', textAlign: 'center', marginBottom: 28 }}>
-          <button 
+          <button
             onClick={() => { localStorage.removeItem('plugah_user'); window.location.href = '/login'; }}
             style={{ position: 'absolute', left: 0, top: 0, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, zIndex: 10 }}
           >
             <span style={{ fontSize: '1.2rem' }}>🚪</span>
             <span style={{ fontSize: '0.8rem' }}>התנתק</span>
           </button>
-          
+
           <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><Shield size={18} /> פלוגה 8170</div>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             {soldier?.photo_url ? (
               <div style={{ position: 'relative', width: 100, height: 100 }}>
-                <Image 
-                  src={soldier.photo_url} 
-                  alt={soldier.full_name} 
-                  fill 
-                  className="object-cover" 
-                  style={{ borderRadius: '50%', border: '4px solid var(--accent)' }} 
+                <Image
+                  src={soldier.photo_url}
+                  alt={soldier.full_name}
+                  fill
+                  className="object-cover"
+                  style={{ borderRadius: '50%', border: '4px solid var(--accent)' }}
                   unoptimized
                 />
                 <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
@@ -215,7 +213,7 @@ export default function SoldierPortalPage() {
               {soldier.departments.name}
             </p>
           )}
-          
+
           {soldier?.pakalim && soldier.pakalim.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginTop: 12 }}>
               {soldier.pakalim.map(p => <span key={p} className="badge badge-gray" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>{p}</span>)}
@@ -225,35 +223,35 @@ export default function SoldierPortalPage() {
 
         {/* Main Tab Navigation */}
         <div className="tab-menu">
-          <button 
+          <button
             className={activeTab === 'status' ? 'active' : ''}
             style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'status' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('status')}
           >
             <MapPin size={16} /> מצב נוכחי
           </button>
-          <button 
+          <button
             className={activeTab === 'requests' ? 'active' : ''}
             style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'requests' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('requests')}
           >
             <Send size={16} /> פניות
           </button>
-          <button 
+          <button
             className={activeTab === 'forms' ? 'active' : ''}
             style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'forms' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('forms')}
           >
             <FileText size={16} /> שאלונים
           </button>
-          <button 
+          <button
             className={activeTab === 'guard' ? 'active' : ''}
             style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'guard' ? 'var(--accent)' : 'var(--text-muted)' }}
             onClick={() => setActiveTab('guard')}
           >
             <Shield size={16} /> שמירות
           </button>
-          <button 
+          <button
             className={activeTab === 'messages' ? 'active' : ''}
             style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'messages' ? 'var(--accent)' : 'var(--text-muted)', position: 'relative' }}
             onClick={() => setActiveTab('messages')}
@@ -286,11 +284,11 @@ export default function SoldierPortalPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>{msg.title}</h3>
                 </div>
-                
+
                 <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 8, marginTop: 4 }}>
                   <p style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{msg.content}</p>
                 </div>
-                
+
                 <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginTop: 12, textAlign: 'left' }}>
                   {new Date(msg.created_at).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
@@ -307,24 +305,24 @@ export default function SoldierPortalPage() {
                 <p style={{ color: 'var(--text-muted)' }}>אין רשימות שמירה פתוחות כרגע.</p>
               </div>
             ) : guardEvents.map(ev => {
-              const shifts = [...(ev.guard_shifts || [])].sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-              
+              const shifts = [...(ev.guard_shifts || [])].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
               return (
                 <div key={ev.id} className="card">
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 6 }}>📍 {ev.location}</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
                     מ- {new Date(ev.start_time).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })} {new Date(ev.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {shifts.map(shift => {
                       const isMe = shift.soldier_id === soldier?.id;
                       const isTaken = !!shift.soldier_id && !isMe;
                       const isOpen = !shift.soldier_id;
-                      
+
                       return (
-                        <div key={shift.id} style={{ 
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                        <div key={shift.id} style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                           padding: '10px 14px', borderRadius: 8,
                           background: isMe ? 'rgba(39, 174, 96, 0.1)' : isOpen ? 'var(--bg-surface)' : 'rgba(0,0,0,0.2)',
                           border: isMe ? '1px solid #27ae60' : '1px solid transparent'
@@ -332,22 +330,22 @@ export default function SoldierPortalPage() {
                           <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isTaken ? 'var(--text-muted)' : 'var(--text)' }}>
                             {new Date(shift.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {new Date(shift.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                          
+
                           {isMe ? (
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#27ae60' }}>🛡️ המשמרת שלך</span>
                           ) : isTaken ? (
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>נתפס</span>
                           ) : (
-                            <button 
+                            <button
                               className="btn btn-primary btn-sm"
                               disabled={saving}
                               onClick={async () => {
                                 if (!confirm('האם אתה בטוח שברצונך להשתבץ למשמרת זו? לא ניתן לבטל אחרי השיבוץ.')) return;
                                 setSaving(true);
                                 await supabase.from('guard_shifts').update({ soldier_id: soldier?.id }).eq('id', shift.id);
-                                
+
                                 setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
-                                  ...e, 
+                                  ...e,
                                   guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, soldier_id: soldier?.id || null } : s)
                                 } : e));
                                 setSaving(false);
@@ -365,7 +363,7 @@ export default function SoldierPortalPage() {
             })}
           </div>
         )}
-        
+
         {activeTab === 'status' && (
           <>
             {/* Missions */}
@@ -379,13 +377,13 @@ export default function SoldierPortalPage() {
                     <div key={m.id} style={{ background: 'var(--bg-surface)', padding: 12, borderRadius: 8 }}>
                       <h4 style={{ fontWeight: 700 }}>{m.title}</h4>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                        🕐 {new Date(m.start_time).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' })}  
+                        🕐 {new Date(m.start_time).toLocaleDateString('he-IL', { month: 'short', day: 'numeric' })}
                         {m.end_time ? ` עד ${new Date(m.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}` : ''}
                         {m.location ? ` | 📍 ${m.location}` : ''}
                       </div>
                       {m.description && <p style={{ fontSize: '0.85rem', marginBottom: 12 }}>{m.description}</p>}
-                      <button 
-                        className="btn btn-primary btn-sm" 
+                      <button
+                        className="btn btn-primary btn-sm"
                         style={{ width: '100%' }}
                         disabled={saving}
                         onClick={async () => {
@@ -407,19 +405,23 @@ export default function SoldierPortalPage() {
             {/* Status */}
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <MapPin size={18} className="text-muted" /> סטטוס נוכחי
+                <MapPin size={18} className="text-muted" /> סטטוס נוכחי (נקבע ע&quot;י סגל)
               </h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {STATUSES.map(s => (
-                  <button key={s} onClick={() => setForm(f => ({ ...f, status: s }))} style={{
-                    padding: '8px 16px', borderRadius: 20, border: `2px solid ${form.status === s ? statusColors[s] || 'var(--accent)' : 'var(--border)'}`,
-                    background: form.status === s ? `${statusColors[s]}22` : 'transparent',
-                    color: form.status === s ? statusColors[s] || 'var(--accent)' : 'var(--text-muted)',
-                    fontFamily: 'Heebo', fontWeight: 600, cursor: 'pointer', fontSize: '0.88rem', transition: 'all 0.2s',
-                  }}>
-                    {s}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ 
+                  padding: '10px 24px', 
+                  borderRadius: 30, 
+                  background: `${statusColors[portal?.status || 'עורף'] || 'var(--bg-surface)'}22`,
+                  color: statusColors[portal?.status || 'עורף'] || 'var(--text-muted)',
+                  border: `2px solid ${statusColors[portal?.status || 'עורף'] || 'var(--border)'}`,
+                  fontWeight: 800,
+                  fontSize: '1.2rem'
+                }}>
+                  {portal?.status || 'עורף'}
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', flex: 1 }}>
+                  הסטטוס שלך נקבע על ידי הסגל בלבד ומסווג את מיקומך הנוכחי.
+                </p>
               </div>
             </div>
 
@@ -428,19 +430,19 @@ export default function SoldierPortalPage() {
               <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Calendar size={18} className="text-muted" /> בקשות מיוחדות - סבב כניסות ויציאות לבנון
               </h3>
-              
+
               <div style={{ background: 'var(--bg-surface)', padding: 16, borderRadius: 12 }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>סמן ימים בלוח להגשת בקשת יציאה מיוחדת:</p>
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
-                  {['א','ב','ג','ד','ה','ו','ש'].map(d => (
+                  {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map(d => (
                     <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-dim)', paddingBottom: 4 }}>{d}</div>
                   ))}
-                  
+
                   {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
                     <div key={`empty-${i}`} />
                   ))}
-                  
+
                   {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
                     const day = i + 1;
                     const dateStr = new Date(new Date().getFullYear(), new Date().getMonth(), day).toISOString().split('T')[0];
@@ -448,18 +450,18 @@ export default function SoldierPortalPage() {
                     const rotation = missions.find(m => m.title === 'סבב לבנון' && m.start_time.startsWith(dateStr));
                     const isStaffColored = !!rotation;
                     const color = rotation?.color;
-                    
+
                     return (
-                      <button 
+                      <button
                         key={day}
                         disabled={saving}
                         onClick={() => {
                           setSelectedDates(prev => prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]);
                         }}
-                        style={{ 
-                          aspectRatio: '1', 
+                        style={{
+                          aspectRatio: '1',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          borderRadius: 8, 
+                          borderRadius: 8,
                           border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
                           background: isSelected ? 'rgba(200, 168, 75, 0.25)' : isStaffColored ? `${color}44` : 'rgba(255,255,255,0.03)',
                           color: isSelected ? 'var(--accent)' : 'var(--text)',
@@ -481,23 +483,23 @@ export default function SoldierPortalPage() {
                 {selectedDates.length > 0 && (
                   <div style={{ marginTop: 20, padding: 16, background: 'rgba(200, 168, 75, 0.05)', borderRadius: 12, border: '1px solid rgba(200, 168, 75, 0.2)' }}>
                     <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 12, color: 'var(--accent)' }}>פרטי הבקשה ({selectedDates.length} ימים נבחרו)</h4>
-                    <textarea 
-                      className="form-textarea" 
+                    <textarea
+                      className="form-textarea"
                       placeholder="הסבר קצר על בקשת היציאה..."
                       value={rotationNote}
                       onChange={e => setRotationNote(e.target.value)}
                       rows={2}
                       style={{ background: 'var(--bg)', marginBottom: 12 }}
                     />
-                    <button 
-                      className="btn btn-primary" 
+                    <button
+                      className="btn btn-primary"
                       style={{ width: '100%', justifyContent: 'center' }}
                       disabled={saving}
                       onClick={async () => {
                         if (!soldier) return;
                         setSaving(true);
                         const sortedDates = [...selectedDates].sort().map(d => new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })).join(', ');
-                        
+
                         await supabase.from('requests').insert({
                           soldier_id: soldier.id,
                           title: 'בקשת יציאה - סבב לבנון',
@@ -505,7 +507,7 @@ export default function SoldierPortalPage() {
                           status: 'pending',
                           description: `תאריכים: ${sortedDates}\n\nהערות: ${rotationNote}`
                         });
-                        
+
                         setSaving(false);
                         setSelectedDates([]);
                         setRotationNote('');
@@ -519,49 +521,38 @@ export default function SoldierPortalPage() {
                   </div>
                 )}
               </div>
-              
-              <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: '0.7rem', justifyContent: 'center', color: 'var(--text-dim)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(200, 168, 75, 0.4)', border: '1px solid var(--accent)' }} /> <span>נבחר לבקשה</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(41, 128, 185, 0.4)' }} /> <span>כניסה ללבנון</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(74, 103, 65, 0.4)' }} /> <span>בית / התרעננות</span>
-                </div>
-              </div>
             </div>
+
 
             {/* Equipment */}
-            <div className="card" style={{ marginBottom: 16 }}>
-              <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Backpack size={18} className="text-muted" /> ציוד מונפק
-              </h3>
-              <textarea className="form-textarea" value={form.equipment_notes} onChange={e => setForm(f => ({ ...f, equipment_notes: e.target.value }))}
-                placeholder="הערות לתצוגה בסגל..." rows={3} />
-            </div>
+              <div className="card" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Backpack size={18} className="text-muted" /> ציוד מונפק
+                </h3>
+                <textarea className="form-textarea" value={form.equipment_notes} onChange={e => setForm(f => ({ ...f, equipment_notes: e.target.value }))}
+                  placeholder="הערות לתצוגה בסגל..." rows={3} />
+              </div>
 
-            {/* Notes */}
-            <div className="card" style={{ marginBottom: 24 }}>
-              <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileText size={18} className="text-muted" /> הערות אישיות
-              </h3>
-              <textarea className="form-textarea" value={form.personal_notes} onChange={e => setForm(f => ({ ...f, personal_notes: e.target.value }))}
-                placeholder="כל מה שתרצה לציין..." rows={3} />
-            </div>
+              {/* Notes */}
+              <div className="card" style={{ marginBottom: 24 }}>
+                <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FileText size={18} className="text-muted" /> הערות אישיות
+                </h3>
+                <textarea className="form-textarea" value={form.personal_notes} onChange={e => setForm(f => ({ ...f, personal_notes: e.target.value }))}
+                  placeholder="כל מה שתרצה לציין..." rows={3} />
+              </div>
 
-            <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}>
-              {saving ? '⏳ שומר...' : '💾 שמור עדכון'}
-            </button>
+              <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}>
+                {saving ? '⏳ שומר...' : '💾 שמור עדכון'}
+              </button>
 
-            <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 16 }}>
-              הנתונים שלך מוצגים לסגל הפלוגה בלבד.<br />
-              במקרה של תקלה נא לפנות לטורקל המלך 👑
-            </p>
-          </>
+              <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 16 }}>
+                הנתונים שלך מוצגים לסגל הפלוגה בלבד.<br />
+                במקרה של תקלה נא לפנות לטורקל המלך 👑
+              </p>
+            </>
         )}
+          </div>
       </div>
-    </div>
-  );
+      );
 }

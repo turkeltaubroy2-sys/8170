@@ -37,8 +37,9 @@ type SoldierWithPortal = {
 };
 
 const statusColors: Record<string, string> = {
-  'בבית': '#2980b9', 'בדרך': '#f39c12', 'בפלוגה': '#27ae60',
-  'בחופש': '#8e44ad', 'מחכה לציוד': '#c0392b', 'אחר': '#7f8c8d',
+  'בבית': '#27ae60',
+  'עורף': '#2980b9',
+  'בפנים': '#c0392b',
 };
 
 const healthColors: Record<string, string> = {
@@ -55,6 +56,36 @@ export default function StaffPage() {
   const [view, setView] = useState<'table' | 'cards'>('cards');
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
+
+  const updateStatus = async (soldierId: string, newStatus: string) => {
+    // Check if portal exists, if not create one or handle accordingly
+    // For simplicity, we assume portals exist or we upsert
+    const { error } = await supabase
+      .from('soldier_portals')
+      .upsert({ 
+        soldier_id: soldierId, 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'soldier_id' });
+
+    if (error) {
+      alert('שגיאה בעדכון הסטטוס: ' + error.message);
+      return;
+    }
+
+    // Update local state
+    setSoldiers(prev => prev.map(s => {
+      if (s.id === soldierId) {
+        return {
+          ...s,
+          soldier_portals: s.soldier_portals 
+            ? { ...s.soldier_portals, status: newStatus, updated_at: new Date().toISOString() }
+            : { status: newStatus, health_declaration: 'תקין', equipment_notes: '', personal_notes: '', updated_at: new Date().toISOString() }
+        };
+      }
+      return s;
+    }));
+  };
 
   const fetchAll = useCallback(async () => {
     setRefreshing(true);
@@ -84,11 +115,10 @@ export default function StaffPage() {
 
   const stats = {
     total: soldiers.length,
-    atBase: soldiers.filter(s => s.soldier_portals?.status === 'בפלוגה').length,
     atHome: soldiers.filter(s => s.soldier_portals?.status === 'בבית').length,
-    enRoute: soldiers.filter(s => s.soldier_portals?.status === 'בדרך').length,
+    rear: soldiers.filter(s => s.soldier_portals?.status === 'עורף').length,
+    inside: soldiers.filter(s => s.soldier_portals?.status === 'בפנים').length,
     injured: soldiers.filter(s => s.soldier_portals?.health_declaration !== 'תקין' && s.soldier_portals?.health_declaration).length,
-    missingEquip: soldiers.filter(s => s.soldier_portals?.equipment_notes).length,
     noPortal: soldiers.filter(s => !s.soldier_portals).length,
   };
 
@@ -179,11 +209,10 @@ export default function StaffPage() {
               {/* Stats */}
               <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', marginBottom: 24 }}>
                 <StatCard label="סה״כ" value={stats.total} color="var(--text)" />
-                <StatCard label="בפלוגה" value={stats.atBase} color="#27ae60" />
-                <StatCard label="בדרך" value={stats.enRoute} color="#f39c12" />
-                <StatCard label="בבית" value={stats.atHome} color="#2980b9" />
-                <StatCard label="לא תקין" value={stats.injured} color="#c0392b" />
-                <StatCard label="ציוד חסר" value={stats.missingEquip} color="#e67e22" />
+                <StatCard label="בבית" value={stats.atHome} color="#27ae60" />
+                <StatCard label="עורף" value={stats.rear} color="#2980b9" />
+                <StatCard label="בפנים" value={stats.inside} color="#c0392b" />
+                <StatCard label="לא תקין" value={stats.injured} color="#e67e22" />
                 <StatCard label="לא עדכנו" value={stats.noPortal} color="var(--text-dim)" />
               </div>
 
@@ -213,8 +242,8 @@ export default function StaffPage() {
                   value={filterStatus} 
                   onChange={e => setFilterStatus(e.target.value)}
                   options={[
-                    { value: '', label: 'כל الסטטוסים' },
-                    ...['בבית', 'בדרך', 'בפלוגה', 'בחופש', 'מחכה לציוד', 'אחר'].map(s => ({ value: s, label: s }))
+                    { value: '', label: 'כל הסטטוסים' },
+                    ...['בבית', 'עורף', 'בפנים'].map(s => ({ value: s, label: s }))
                   ]}
                 />
                 <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: 42 }}>
@@ -271,12 +300,24 @@ export default function StaffPage() {
                             {s.departments ? `${s.departments.icon} ${s.departments.name}` : '—'}
                           </td>
                           <td>
-                            {s.soldier_portals ? (
-                              <Badge style={{
-                                background: `${statusColors[s.soldier_portals.status] || '#7f8c8d'}22`,
-                                color: statusColors[s.soldier_portals.status] || '#7f8c8d',
-                              }}>{s.soldier_portals.status}</Badge>
-                            ) : <Badge variant="gray">לא עדכן</Badge>}
+                            <Select 
+                              value={s.soldier_portals?.status || ''} 
+                              onChange={(e) => updateStatus(s.id, e.target.value)}
+                              style={{ 
+                                marginBottom: 0, 
+                                fontSize: '0.8rem',
+                                padding: '4px 8px',
+                                background: s.soldier_portals ? `${statusColors[s.soldier_portals.status] || '#7f8c8d'}11` : 'transparent',
+                                color: s.soldier_portals ? (statusColors[s.soldier_portals.status] || 'var(--text)') : 'var(--text-muted)',
+                                border: `1px solid ${s.soldier_portals ? (statusColors[s.soldier_portals.status] || 'var(--border)') : 'var(--border)'}`
+                              }}
+                              options={[
+                                { value: '', label: 'בחר סטטוס' },
+                                { value: 'בבית', label: '🏡 בבית' },
+                                { value: 'עורף', label: '🛡️ עורף' },
+                                { value: 'בפנים', label: '🔥 בפנים' }
+                              ]}
+                            />
                           </td>
                           <td>
                             {s.soldier_portals ? (
@@ -335,21 +376,36 @@ export default function StaffPage() {
                           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.rank}</p>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {s.soldier_portals ? (
-                          <>
-                            <Badge style={{ background: `${statusColors[s.soldier_portals.status] || '#7f8c8d'}22`, color: statusColors[s.soldier_portals.status] || '#7f8c8d', width: 'fit-content' }}>{s.soldier_portals.status}</Badge>
-                            <span style={{ fontSize: '0.75rem', color: healthColors[s.soldier_portals.health_declaration] || 'var(--text-muted)' }}>🏥 {s.soldier_portals.health_declaration}</span>
-                            {s.soldier_portals.equipment_notes && <span style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>⚠️ {s.soldier_portals.equipment_notes.slice(0,50)}</span>}
-                          </>
-                        ) : <Badge variant="gray" style={{width: 'fit-content'}}>לא עדכן</Badge>}
-                        
-                        {s.pakalim && s.pakalim.length > 0 && (
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
-                            {s.pakalim.map(p => <Badge key={p} variant="gray" style={{fontSize: '0.65rem', padding: '2px 6px'}}>{p}</Badge>)}
-                          </div>
-                        )}
+                      <div style={{ marginTop: 8 }}>
+                          <Select 
+                            value={s.soldier_portals?.status || ''} 
+                            onChange={(e) => updateStatus(s.id, e.target.value)}
+                            style={{ 
+                              marginBottom: 0,
+                              fontSize: '0.85rem',
+                              background: s.soldier_portals ? `${statusColors[s.soldier_portals.status] || '#7f8c8d'}11` : 'transparent',
+                              color: s.soldier_portals ? (statusColors[s.soldier_portals.status] || 'var(--text)') : 'var(--text-muted)'
+                            }}
+                            options={[
+                              { value: '', label: 'בחר סטטוס' },
+                              { value: 'בבית', label: '🏡 בבית' },
+                              { value: 'עורף', label: '🛡️ עורף' },
+                              { value: 'בפנים', label: '🔥 בפנים' }
+                            ]}
+                          />
+                          {s.soldier_portals ? (
+                            <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <span style={{ fontSize: '0.75rem', color: healthColors[s.soldier_portals.health_declaration] || 'var(--text-muted)' }}>🏥 {s.soldier_portals.health_declaration}</span>
+                              {s.soldier_portals.equipment_notes && <span style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>⚠️ {s.soldier_portals.equipment_notes.slice(0,50)}</span>}
+                            </div>
+                          ) : <Badge variant="gray" style={{width: 'fit-content', marginTop: 6}}>לא עדכן</Badge>}
                       </div>
+                      
+                      {s.pakalim && s.pakalim.length > 0 && (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
+                          {s.pakalim.map(p => <Badge key={p} variant="gray" style={{fontSize: '0.65rem', padding: '2px 6px'}}>{p}</Badge>)}
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>
