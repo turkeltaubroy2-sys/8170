@@ -53,7 +53,7 @@ export default function SoldierPortalPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'messages'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'messages' | 'equipment'>('status');
   const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
@@ -61,7 +61,7 @@ export default function SoldierPortalPage() {
     personal_notes: '',
     equipment: {} as Record<string, any>
   });
-  const [isEditingEquip, setIsEditingEquip] = useState(true);
+  const [isEditingEquip, setIsEditingEquip] = useState(false);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [rotationNote, setRotationNote] = useState('');
 
@@ -118,12 +118,15 @@ export default function SoldierPortalPage() {
         personal_notes: portalData.personal_notes || '',
         equipment: parsedEquip
       });
-      if (portalData.equipment && Object.keys(portalData.equipment).length > 0) {
+      if (Object.keys(parsedEquip).length > 0) {
         setIsEditingEquip(false);
+      } else {
+        setIsEditingEquip(true);
       }
     } else {
       // Create portal entry
       await supabase.from('soldier_portals').insert({ soldier_id: soldierData.id, status: 'בבית', health_declaration: 'תקין' });
+      setIsEditingEquip(true);
     }
     setLoading(false);
   }, [token]);
@@ -157,6 +160,31 @@ export default function SoldierPortalPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
     setSaving(false);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setForm(prev => ({
+        ...prev,
+        equipment: {
+          ...prev.equipment,
+          [name]: checked
+        }
+      }));
+    } else if (name.startsWith('equipment_')) {
+      const equipId = name.substring('equipment_'.length);
+      setForm(prev => ({
+        ...prev,
+        equipment: {
+          ...prev.equipment,
+          [equipId]: value
+        }
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,6 +329,13 @@ export default function SoldierPortalPage() {
             onClick={() => setActiveTab('guard')}
           >
             <Shield size={16} /> שמירות
+          </button>
+          <button
+            className={activeTab === 'equipment' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'equipment' ? 'var(--accent)' : 'var(--text-muted)' }}
+            onClick={() => setActiveTab('equipment')}
+          >
+            <Backpack size={16} /> ציוד
           </button>
           <button
             className={activeTab === 'messages' ? 'active' : ''}
@@ -575,6 +610,23 @@ export default function SoldierPortalPage() {
             </div>
 
 
+            {/* Notes */}
+            <div className="card" style={{ marginBottom: 24 }}>
+              <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FileText size={18} className="text-muted" /> הערות אישיות
+              </h3>
+              <textarea className="form-textarea" value={form.personal_notes} onChange={e => setForm(f => ({ ...f, personal_notes: e.target.value }))}
+                placeholder="כל מה שתרצה לציין..." rows={3} />
+            </div>
+
+            <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}>
+              {saving ? '⏳ שומר...' : '💾 שמור עדכון'}
+            </button>
+          </>
+        )}
+
+        {activeTab === 'equipment' && (
+          <>
             {/* Equipment */}
             <div className="card" style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -644,26 +696,12 @@ export default function SoldierPortalPage() {
                 </div>
               )}
             </div>
-
-              {/* Notes */}
-              <div className="card" style={{ marginBottom: 24 }}>
-                <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText size={18} className="text-muted" /> הערות אישיות
-                </h3>
-                <textarea className="form-textarea" value={form.personal_notes} onChange={e => setForm(f => ({ ...f, personal_notes: e.target.value }))}
-                  placeholder="כל מה שתרצה לציין..." rows={3} />
-              </div>
-
-              <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}>
-                {saving ? '⏳ שומר...' : '💾 שמור עדכון'}
-              </button>
-
+          </>
+        )}
               <p style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '0.85rem', marginTop: 16 }}>
                 הנתונים שלך מוצגים לסגל הפלוגה בלבד.<br />
                 במקרה של תקלה נא לפנות לטורקל המלך 👑
               </p>
-            </>
-        )}
           </div>
       </div>
       );
