@@ -102,10 +102,21 @@ export default function SoldierPortalPage() {
 
     if (portalData) {
       setPortal(portalData);
+      
+      let parsedEquip = {};
+      if (portalData.equipment_notes) {
+        try {
+          // If it starts with {, it's likely our JSON
+          if (portalData.equipment_notes.startsWith('{')) {
+            parsedEquip = JSON.parse(portalData.equipment_notes);
+          }
+        } catch (e) {}
+      }
+
       setForm({
         health_declaration: portalData.health_declaration || 'תקין',
         personal_notes: portalData.personal_notes || '',
-        equipment: portalData.equipment || {}
+        equipment: parsedEquip
       });
       if (portalData.equipment && Object.keys(portalData.equipment).length > 0) {
         setIsEditingEquip(false);
@@ -138,13 +149,14 @@ export default function SoldierPortalPage() {
       soldier_id: soldier.id,
       health_declaration: form.health_declaration,
       personal_notes: form.personal_notes,
-      equipment: form.equipment,
+      equipment_notes: JSON.stringify(form.equipment),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'soldier_id' });
+
     setIsEditingEquip(false);
-    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+    setSaving(false);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

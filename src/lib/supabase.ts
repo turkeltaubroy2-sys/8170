@@ -36,6 +36,7 @@ export type SoldierPortal = {
   health_declaration: string;
   equipment_notes: string;
   personal_notes: string;
+  equipment: Record<string, any>;
   equipment_list: string[];
   updated_at: string;
 };

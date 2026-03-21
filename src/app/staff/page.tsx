@@ -30,7 +30,7 @@ type SoldierWithPortal = {
   soldier_portals?: {
     status: string;
     health_declaration: string;
-    equipment?: Record<string, any>;
+    equipment_notes: string;
     personal_notes: string;
     updated_at: string;
   };
@@ -113,7 +113,7 @@ export default function StaffPage() {
           ...s,
           soldier_portals: s.soldier_portals 
             ? { ...s.soldier_portals, status: newStatus, updated_at: new Date().toISOString() }
-            : { status: newStatus, health_declaration: 'תקין', equipment: {}, personal_notes: '', updated_at: new Date().toISOString() }
+            : { status: newStatus, health_declaration: 'תקין', equipment_notes: '{}', personal_notes: '', updated_at: new Date().toISOString() }
         };
       }
       return s;
@@ -124,7 +124,7 @@ export default function StaffPage() {
     setRefreshing(true);
     const [depsRes, soldiersRes] = await Promise.all([
       supabase.from('departments').select('id, name, icon').order('order'),
-      supabase.from('soldiers').select('*, departments(name,icon), soldier_portals(status,health_declaration,equipment,personal_notes,updated_at)').order('full_name'),
+      supabase.from('soldiers').select('*, departments(name,icon), soldier_portals(status,health_declaration,equipment_notes,personal_notes,updated_at)').order('full_name'),
     ]);
     setDepartments(depsRes.data || []);
     setSoldiers(soldiersRes.data || []);
@@ -159,21 +159,27 @@ export default function StaffPage() {
 
   const exportCSV = () => {
     const headers = ['שם מלא', 'מחלקה', 'טלפון', 'סטטוס', 'הצהרת בריאות', 'פק"לים', ...EQUIPMENT_ITEMS.map(i => i.label), 'הערות אישיות', 'עדכון אחרון'];
-    const rows = filtered.map(s => [
-      s.full_name || '',
-      s.departments?.name || '',
-      s.phone || '',
-      s.soldier_portals?.status || 'לא עדכן',
-      s.soldier_portals?.health_declaration || '',
-      (s.pakalim || []).join(', '),
-      ...EQUIPMENT_ITEMS.map(i => {
-        const val = s.soldier_portals?.equipment?.[i.id];
-        if (i.type === 'boolean') return val ? 'V' : 'X';
-        return val || 'לא';
-      }),
-      s.soldier_portals?.personal_notes || '',
-      formatTime(s.soldier_portals?.updated_at)
-    ]);
+    const rows = filtered.map(s => {
+      let equipment: Record<string, any> = {};
+      if (s.soldier_portals?.equipment_notes && s.soldier_portals.equipment_notes.startsWith('{')) {
+        try { equipment = JSON.parse(s.soldier_portals.equipment_notes); } catch(e) {}
+      }
+      return [
+        s.full_name || '',
+        s.departments?.name || '',
+        s.phone || '',
+        s.soldier_portals?.status || 'לא עדכן',
+        s.soldier_portals?.health_declaration || '',
+        (s.pakalim || []).join(', '),
+        ...EQUIPMENT_ITEMS.map(i => {
+          const val = equipment[i.id];
+          if (i.type === 'boolean') return val ? 'V' : 'X';
+          return val || 'לא';
+        }),
+        s.soldier_portals?.personal_notes || '',
+        formatTime(s.soldier_portals?.updated_at)
+      ];
+    });
     
     const csvContent = [
       headers.join(','),
@@ -371,10 +377,17 @@ export default function StaffPage() {
                             </div>
                           </td>
                           <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {s.soldier_portals?.equipment ? (
+                            {s.soldier_portals?.equipment_notes ? (
                               (() => {
+                                let equipment: Record<string, any> = {};
+                                try { 
+                                  if (s.soldier_portals.equipment_notes.startsWith('{')) {
+                                    equipment = JSON.parse(s.soldier_portals.equipment_notes);
+                                  }
+                                } catch(e) {}
+                                
                                 const count = EQUIPMENT_ITEMS.filter(i => {
-                                  const v = s.soldier_portals?.equipment?.[i.id];
+                                  const v = equipment[i.id];
                                   return i.type === 'boolean' ? !!v : (v && v !== 'לא');
                                 }).length;
                                 const total = EQUIPMENT_ITEMS.length;
@@ -449,24 +462,31 @@ export default function StaffPage() {
                             <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
                               <span style={{ fontSize: '0.75rem', color: healthColors[s.soldier_portals.health_declaration] || 'var(--text-muted)' }}>🏥 {s.soldier_portals.health_declaration}</span>
                               <div style={{ background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 8, marginTop: 2 }}>
-                                {(() => {
-                                  const count = EQUIPMENT_ITEMS.filter(i => {
-                                    const v = s.soldier_portals?.equipment?.[i.id];
-                                    return i.type === 'boolean' ? !!v : (v && v !== 'לא');
-                                  }).length;
-                                  const total = EQUIPMENT_ITEMS.length;
-                                  return (
-                                    <button 
-                                      onClick={() => { setSelectedSoldier(s); setShowEquipModal(true); }}
-                                      style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                    >
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>ציוד חתום:</span>
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: count === total ? 'var(--primary)' : 'var(--text)' }}>{count}/{total} 👁️</span>
-                                      </div>
-                                    </button>
-                                  );
-                                })()}
+                                 {(() => {
+                                   let equipment: Record<string, any> = {};
+                                   try { 
+                                     if (s.soldier_portals?.equipment_notes?.startsWith('{')) {
+                                       equipment = JSON.parse(s.soldier_portals.equipment_notes);
+                                     }
+                                   } catch(e) {}
+                                   
+                                   const count = EQUIPMENT_ITEMS.filter(i => {
+                                     const v = equipment[i.id];
+                                     return i.type === 'boolean' ? !!v : (v && v !== 'לא');
+                                   }).length;
+                                   const total = EQUIPMENT_ITEMS.length;
+                                    return (
+                                     <button 
+                                       onClick={() => { setSelectedSoldier(s); setShowEquipModal(true); }}
+                                       style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                     >
+                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                         <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>ציוד חתום:</span>
+                                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: count === total ? 'var(--primary)' : 'var(--text)' }}>{count}/{total} 👁️</span>
+                                       </div>
+                                     </button>
+                                   );
+                                 })()}
                               </div>
                             </div>
                           ) : <Badge variant="gray" style={{width: 'fit-content', marginTop: 6}}>לא עדכן</Badge>}
@@ -498,22 +518,31 @@ export default function StaffPage() {
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                {EQUIPMENT_ITEMS.map(i => {
-                  const val = selectedSoldier.soldier_portals?.equipment?.[i.id];
-                  const has = i.type === 'boolean' ? !!val : (val && val !== 'לא');
-                  return (
-                    <div key={i.id} style={{ 
-                      padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8,
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      border: `1px solid ${has ? 'var(--primary)44' : 'transparent'}`
-                    }}>
-                      <span style={{ fontSize: '0.85rem' }}>{i.label}</span>
-                      <span style={{ fontSize: '0.9rem', color: has ? 'var(--primary)' : 'var(--text-dim)' }}>
-                        {i.type === 'boolean' ? (val ? '✅' : '❌') : (val || '❌')}
-                      </span>
-                    </div>
-                  );
-                })}
+                {(() => {
+                  let equipment: Record<string, any> = {};
+                  try { 
+                    if (selectedSoldier.soldier_portals?.equipment_notes?.startsWith('{')) {
+                      equipment = JSON.parse(selectedSoldier.soldier_portals.equipment_notes);
+                    }
+                  } catch(e) {}
+                  
+                  return EQUIPMENT_ITEMS.map(i => {
+                    const val = equipment[i.id];
+                    const has = i.type === 'boolean' ? !!val : (val && val !== 'לא');
+                    return (
+                      <div key={i.id} style={{ 
+                        padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8,
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        border: `1px solid ${has ? 'var(--primary)44' : 'transparent'}`
+                      }}>
+                        <span style={{ fontSize: '0.85rem' }}>{i.label}</span>
+                        <span style={{ fontSize: '0.9rem', color: has ? 'var(--primary)' : 'var(--text-dim)' }}>
+                          {i.type === 'boolean' ? (val ? '✅' : '❌') : (val || '❌')}
+                        </span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
