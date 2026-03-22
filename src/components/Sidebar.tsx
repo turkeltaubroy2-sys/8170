@@ -6,26 +6,26 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/', icon: <Home size={18} />, label: 'ראשי' },
   { href: '/schedule', icon: <Calendar size={18} />, label: 'לו"ז' },
-  { href: '/lists', icon: <ClipboardList size={18} />, label: 'משימות' },
+  { href: '/staff', icon: <Shield size={18} />, label: 'סגל' },
   { href: '/guard-duty', icon: <Clock size={18} />, label: 'שמירות' },
+  { href: '/lists', icon: <ClipboardList size={18} />, label: 'משימות' },
   { href: '/logistics', icon: <Package size={18} />, label: 'לוגיסטיקה' },
   { href: '/personnel', icon: <Users size={18} />, label: 'לוחמים' },
   { href: '/media', icon: <ImageIcon size={18} />, label: 'מדיה' },
   { href: '/staff/messages', icon: <Bell size={18} />, label: 'לוח מודעות' },
-  { href: '/staff', icon: <Shield size={18} />, label: 'סגל' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
-  // For mobile, we only show the 5 most important icons to avoid crowding
+  // For mobile, we only show the 6 most important icons to avoid crowding
   const mobileNavItems = [
     { href: '/', icon: '🏠', label: 'ראשי' },
     { href: '/schedule', icon: '📅', label: 'לו"ז' },
+    { href: '/staff', icon: '👁️', label: 'סגל' },
     { href: '/guard-duty', icon: '🛡️', label: 'שמירות' },
     { href: '/personnel', icon: '👥', label: 'לוחמים' },
     { href: '/staff/messages', icon: '📢', label: 'לוח' },
-    { href: '/staff', icon: '👁️', label: 'סגל' },
   ];
 
   const handleLogout = (e?: React.MouseEvent) => {
