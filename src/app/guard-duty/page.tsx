@@ -151,24 +151,24 @@ export default function GuardDutyPage() {
   return (
     <div className="app-wrapper">
       <Sidebar />
-      <main className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
+      <main className="main-content" style={{ padding: 'clamp(12px, 3vw, 24px)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <h2 style={{ fontSize: 'clamp(1.25rem, 5vw, 1.75rem)', fontWeight: 800, color: 'var(--text)' }}>🛡️ ניהול שמירות</h2>
-            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem' }}>יצירת רשימות וניהול שיבוצים מול בקשות חיילים</p>
+            <h2 style={{ fontSize: 'clamp(1.1rem, 4.5vw, 1.5rem)', fontWeight: 800, color: 'var(--text)' }}>🛡️ ניהול שמירות</h2>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>מצב כוחות ושיבוצים</p>
           </div>
-          <Button onClick={() => setShowModal(true)} style={{ width: '100%', maxWidth: '200px' }}>+ רשימת שמירה חדשה</Button>
+          <Button onClick={() => setShowModal(true)} style={{ width: 'auto', minWidth: '160px', padding: '10px 16px' }}>+ רשימה חדשה</Button>
         </div>
 
         <div className="page-body">
           {loading ? <div className="loading-spinner"><div className="spinner" /></div> : (
             events.length === 0 ? (
-              <Card style={{ textAlign: 'center', padding: 60, color: 'var(--text-dim)' }}>
-                <Shield size={64} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
-                <p>אין רשימות שמירה פעילות. צור רשימה כדי להתחיל.</p>
+              <Card style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>
+                <Shield size={48} style={{ margin: '0 auto 12px', opacity: 0.2 }} />
+                <p style={{ fontSize: '0.9rem' }}>אין רשימות שמירה פעילות.</p>
               </Card>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {events.map((ev) => {
                   const sortedShifts = [...(ev.guard_shifts || [])].sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
                   const targetSols = getFilteredSoldiers(ev.target_status);
@@ -178,88 +178,84 @@ export default function GuardDutyPage() {
                   const isFull = filledShifts === totalShifts && totalShifts > 0;
 
                   return (
-                    <Card key={ev.id} style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-                        <div style={{ display: 'flex', gap: 16, flex: 1, minWidth: '200px' }}>
-                          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
-                            <MapPin size={24} />
+                    <Card key={ev.id} style={{ padding: 'clamp(12px, 2.5vw, 16px)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+                        <div style={{ display: 'flex', gap: 12, flex: 1, minWidth: '180px' }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
+                            <MapPin size={20} />
                           </div>
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                              <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{ev.location}</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{ev.location}</h3>
                               <Badge style={{ 
                                 background: ev.target_status === 'בפנים' ? '#e74c3c22' : ev.target_status === 'עורף' ? '#2980b922' : 'var(--bg-card)',
                                 color: ev.target_status === 'בפנים' ? '#e74c3c' : ev.target_status === 'עורף' ? '#2980b9' : 'var(--text-dim)',
-                                whiteSpace: 'nowrap',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                flexShrink: 0
+                                fontSize: '0.7rem',
+                                padding: '2px 8px'
                               }}>יעד: {ev.target_status === 'all' ? 'כולם' : ev.target_status}</Badge>
-                              {pendingCount > 0 && <Badge style={{ background: '#f39c1222', color: '#f39c12', whiteSpace: 'nowrap', flexShrink: 0 }}><Clock size={12} style={{marginLeft: 4}}/> {pendingCount} בקשות פתוחות</Badge>}
-                              {isFull && <Badge style={{ background: '#27ae6022', color: '#27ae60', whiteSpace: 'nowrap', flexShrink: 0 }}><CheckCircle size={12} style={{marginLeft: 4}}/> הרשימה מלאה</Badge>}
+                              {pendingCount > 0 && <Badge style={{ background: '#f39c1222', color: '#f39c12', fontSize: '0.7rem', padding: '2px 8px' }}>{pendingCount} בקשות</Badge>}
+                              {isFull && <Badge style={{ background: '#27ae6022', color: '#27ae60', fontSize: '0.7rem', padding: '2px 8px' }}>מלא</Badge>}
                             </div>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: 4 }}>
-                              {formatDate(ev.start_time)} • {formatTime(ev.start_time)} - {formatTime(ev.end_time)} | משמרת: {ev.shift_duration} דק'
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                              {formatDate(ev.start_time)} • {formatTime(ev.start_time)} - {formatTime(ev.end_time)}
                             </p>
                           </div>
                         </div>
-                        <Button variant="secondary" size="sm" onClick={() => deleteEvent(ev.id)} style={{ color: '#e74c3c' }}><Trash2 size={16} /></Button>
+                        <Button variant="secondary" size="sm" onClick={() => deleteEvent(ev.id)} style={{ color: '#e74c3c', width: 32, height: 32, padding: 0 }}><Trash2 size={16} /></Button>
                       </div>
 
                       {isFull ? (
-                        <div style={{ background: '#27ae6008', border: '1px solid #27ae6033', borderRadius: 16, padding: 'clamp(16px, 4vw, 32px)', textAlign: 'center' }}>
-                          <CheckCircle size={40} style={{ color: '#27ae60', marginBottom: 16, opacity: 0.8 }} />
-                          <h4 style={{ color: '#27ae60', fontWeight: 800, fontSize: '1.2rem', marginBottom: 8 }}>סבב שמירות הושלם</h4>
-                          <p style={{ fontSize: '0.95rem', color: 'var(--text-dim)', marginBottom: 24 }}>כל {totalShifts} המשמרות אוישו ושובצו בהצלחה.</p>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                        <div style={{ background: '#27ae6005', border: '1px solid #27ae6022', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                          <CheckCircle size={24} style={{ color: '#27ae60', marginBottom: 8, opacity: 0.8 }} />
+                          <h4 style={{ color: '#27ae60', fontWeight: 800, fontSize: '1rem', marginBottom: 4 }}>סבב הושלם</h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8, marginTop: 12 }}>
                             {sortedShifts.map(s => (
-                              <div key={s.id} style={{ background: 'var(--bg-surface)', padding: '10px 14px', borderRadius: 10, display: 'flex', justifyContent: 'space-between', border: '1px solid var(--border)' }}>
-                                <span style={{ fontWeight: 800, color: 'var(--text-dim)', fontSize: '0.85rem' }}>{formatTime(s.start_time)}</span>
-                                <span style={{ fontWeight: 700, color: 'var(--text)' }}>{(s as any).soldiers?.full_name || 'שומר'}</span>
+                              <div key={s.id} style={{ background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 8, display: 'flex', justifyContent: 'space-between', border: '1px solid var(--border)' }}>
+                                <span style={{ fontWeight: 800, color: 'var(--text-dim)', fontSize: '0.75rem' }}>{formatTime(s.start_time)}</span>
+                                <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.75rem' }}>{(s as any).soldiers?.full_name || 'שומר'}</span>
                               </div>
                             ))}
                           </div>
-                          <Button variant="secondary" size="sm" style={{ marginTop: 24, padding: '8px 24px' }} onClick={() => fetchData()}>🔄 רענן רשימה</Button>
                         </div>
                       ) : (
-                        <div style={{ background: 'var(--bg-surface)', borderRadius: 'var(--radius)', overflowX: 'auto', border: '1px solid var(--border)' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
+                        <div style={{ background: 'var(--bg-surface)', borderRadius: 10, overflowX: 'auto', border: '1px solid var(--border)' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '450px' }}>
                             <thead>
-                              <tr style={{ background: 'rgba(0,0,0,0.05)' }}>
-                                <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>שעה</th>
-                                <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>סטטוס / בקשה</th>
-                                <th style={{ padding: '14px 16px', textAlign: 'right', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>שיבוץ סגל</th>
+                              <tr style={{ background: 'rgba(0,0,0,0.02)' }}>
+                                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>שעה</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>בקשה</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>שיבוץ</th>
                               </tr>
                             </thead>
                             <tbody>
                               {sortedShifts.map(shift => (
                                 <tr key={shift.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                  <td style={{ padding: '14px 16px', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)' }}>
-                                    {formatTime(shift.start_time)} - {formatTime(shift.end_time)}
+                                  <td style={{ padding: '10px 12px', fontWeight: 700, fontSize: '0.8rem', color: 'var(--text)' }}>
+                                    {formatTime(shift.start_time)}
                                   </td>
-                                  <td style={{ padding: '14px 16px' }}>
+                                  <td style={{ padding: '10px 12px' }}>
                                     {shift.soldier_id ? (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#27ae60', fontWeight: 800 }}>
-                                        <CheckCircle size={14} /> {(shift as any).soldiers?.full_name}
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem' }}>
+                                        <CheckCircle size={12} /> {(shift as any).soldiers?.full_name}
                                       </div>
                                     ) : shift.requested_by_id ? (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <Badge style={{ background: '#f39c1222', color: '#f39c12', border: '1px solid #f39c1244' }}>
-                                          🙋‍♂️ {(shift as any).requester?.full_name || 'חייל'}
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <Badge style={{ background: '#f39c1215', color: '#f39c12', fontSize: '0.7rem', padding: '1px 6px' }}>
+                                          {(shift as any).requester?.full_name || 'חייל'}
                                         </Badge>
-                                        <Button variant="primary" size="sm" onClick={() => confirmRequest(shift)} style={{ fontSize: '0.75rem', padding: '4px 10px', height: 'auto', fontWeight: 800 }}>אשר שיבוץ</Button>
+                                        <button onClick={() => confirmRequest(shift)} style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 4, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>אשר</button>
                                       </div>
                                     ) : (
-                                      <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem', fontStyle: 'italic' }}>טרם שובץ</span>
+                                      <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontStyle: 'italic' }}>—</span>
                                     )}
                                   </td>
-                                  <td style={{ padding: '14px 16px' }}>
+                                  <td style={{ padding: '10px 12px' }}>
                                     <Select 
-                                      style={{ width: '100%', maxWidth: '180px', marginBottom: 0, fontSize: '0.85rem', fontWeight: 600 }}
+                                      style={{ width: '100%', maxWidth: '140px', marginBottom: 0, fontSize: '0.75rem', padding: '4px' }}
                                       value={shift.soldier_id || ''}
                                       onChange={(e) => assignSoldier(shift.id, e.target.value)}
                                       options={[
-                                        { value: '', label: 'בחר חייל לשיבוץ...' },
+                                        { value: '', label: 'שיבוץ...' },
                                         ...targetSols.map(s => ({ value: s.id, label: s.full_name }))
                                       ]}
                                     />
@@ -283,112 +279,104 @@ export default function GuardDutyPage() {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            padding: 'clamp(8px, 2vw, 24px)',
-            backdropFilter: 'blur(8px)',
-            background: 'rgba(0,0,0,0.6)'
+            padding: 'clamp(4px, 1.5vw, 16px)',
+            backdropFilter: 'blur(4px)',
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 1000
           }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
             <Card className="modal" style={{ 
-              maxWidth: 580, 
+              maxWidth: 500, 
               width: '100%', 
               padding: 0, 
               overflow: 'hidden', 
               border: '1px solid var(--border)', 
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
-              maxHeight: '90vh', 
+              boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)', 
+              maxHeight: '94vh', 
               display: 'flex',
               flexDirection: 'column',
-              borderRadius: 24,
+              borderRadius: 20,
               animation: 'modalSlideUp 0.3s ease-out'
             }}>
-              <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '24px 32px', color: 'var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '16px 24px', color: 'var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <div>
-                  <h3 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Shield size={28} /> פקודת שמירה חדשה
+                  <h3 style={{ fontSize: 'clamp(1.1rem, 4vw, 1.3rem)', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Shield size={24} /> פקודת שמירה
                   </h3>
-                  <p style={{ margin: '4px 0 0', opacity: 0.9, fontSize: '0.95rem', color: 'white', fontWeight: 500 }}>הגדרת מיקום, זמנים וחלוקת משמרות</p>
+                  <p style={{ margin: '2px 0 0', opacity: 0.8, fontSize: '0.75rem', color: 'white' }}>הגדרת מיקום וזמנים</p>
                 </div>
-                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', width: 40, height: 40, borderRadius: '50%', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>✕</button>
+                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', width: 32, height: 32, borderRadius: '50%', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
               
-              <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto' }}>
+              <div style={{ padding: 'clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
                 <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)' }}>
-                    <MapPin size={20} style={{ color: 'var(--primary)' }} /> מיקום / שם עמדה
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                    <MapPin size={16} style={{ color: 'var(--primary)' }} /> מיקום
                   </label>
                   <input 
                     className="form-input" 
                     value={form.location} 
                     onChange={e => setForm(f => ({ ...f, location: e.target.value }))} 
-                    placeholder='למשל: ד.ג מזרחי, ש"ג ראשי, סיור הקפי...' 
-                    style={{ fontSize: '1.1rem', padding: '14px 18px', fontWeight: 600, borderRadius: 12, background: 'var(--bg-surface)' }}
+                    placeholder='ש"ג ראשי, סיור...' 
+                    style={{ fontSize: '0.95rem', padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface)' }}
                   />
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)' }}>
-                      <Clock size={20} style={{ color: 'var(--primary)' }} /> שעת התחלה
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Clock size={16} /> התחלה
                     </label>
-                    <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} style={{ padding: '14px', borderRadius: 12, background: 'var(--bg-surface)', fontWeight: 600 }} />
+                    <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} style={{ padding: '10px', borderRadius: 10, fontSize: '0.85rem' }} />
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)' }}>
-                      <Clock size={20} style={{ color: 'var(--primary)' }} /> שעת סיום
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Clock size={16} /> סיום
                     </label>
-                    <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} style={{ padding: '14px', borderRadius: 12, background: 'var(--bg-surface)', fontWeight: 600 }} />
+                    <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} style={{ padding: '10px', borderRadius: 10, fontSize: '0.85rem' }} />
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)' }}>
-                      <Clock size={20} style={{ color: 'var(--primary)' }} /> משך משמרת (דקות)
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Clock size={16} /> דקות לכל שומר
                     </label>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ position: 'relative', flex: 1 }}>
-                        <input 
-                          type="number" 
-                          className="form-input" 
-                          value={form.shift_duration} 
-                          onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) || 0 }))}
-                          min="1"
-                          style={{ textAlign: 'center', fontSize: '1.3rem', fontWeight: 800, padding: '12px', borderRadius: 12, background: 'var(--bg-surface)' }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button 
-                          onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) + 30) }))} 
-                          style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)', padding: '12px 14px', borderRadius: 12, fontSize: '0.9rem', cursor: 'pointer', fontWeight: 800, color: 'var(--primary)' }}
-                        >+30</button>
-                        <button 
-                          onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) - 30) }))} 
-                          style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)', padding: '12px 14px', borderRadius: 12, fontSize: '0.9rem', cursor: 'pointer', fontWeight: 800, color: 'var(--danger)' }}
-                        >-30</button>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={form.shift_duration} 
+                        onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) || 0 }))}
+                        style={{ textAlign: 'center', fontSize: '1.1rem', fontWeight: 800, padding: '8px', borderRadius: 10, width: '60px' }}
+                      />
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) + 30) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 800 }}>+30</button>
+                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) - 30) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 800 }}>-30</button>
                       </div>
                     </div>
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text)' }}>
-                      <Users size={20} style={{ color: 'var(--primary)' }} /> יעד הרשימה
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Users size={16} /> יעד
                     </label>
                     <Select 
                       value={form.target_status} 
                       onChange={e => setForm(f => ({ ...f, target_status: e.target.value }))}
                       options={[
                         { value: 'all', label: '🌍 כולם' },
-                        { value: 'בפנים', label: '🔥 חיילים בפנים' },
-                        { value: 'עורף', label: '🛡️ חיילים בעורף' },
+                        { value: 'בפנים', label: '🔥 בפנים' },
+                        { value: 'עורף', label: '🛡️ עורף' },
                       ]}
-                      style={{ height: '54px', fontSize: '1.05rem', fontWeight: 700, borderRadius: 12, background: 'var(--bg-surface)' }}
+                      style={{ height: '44px', fontSize: '0.9rem', fontWeight: 700, borderRadius: 10 }}
                     />
                   </div>
                 </div>
 
                 {/* Summary Box */}
-                <div style={{ background: 'rgba(255,215,0,0.05)', borderRadius: 20, padding: 20, border: '1px solid rgba(255,215,0,0.2)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>סך הכל משמרות שייווצרו:</span>
-                    <div style={{ background: 'var(--primary)', color: 'white', fontSize: '1.4rem', fontWeight: 900, padding: '4px 20px', borderRadius: 12, boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
+                <div style={{ background: 'rgba(255,215,0,0.03)', borderRadius: 14, padding: 14, border: '1px solid rgba(255,215,0,0.15)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>משמרות שייווצרו:</span>
+                    <div style={{ background: 'var(--primary)', color: 'white', fontSize: '1.1rem', fontWeight: 900, padding: '2px 12px', borderRadius: 8 }}>
                       {(() => {
                         if (!form.start_time || !form.end_time || !form.shift_duration) return 0;
                         const s = new Date(form.start_time).getTime();
@@ -398,18 +386,16 @@ export default function GuardDutyPage() {
                       })()}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <AlertTriangle size={20} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }} />
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', margin: 0, lineHeight: 1.5 }}>
-                      המשמרות ייווצרו באופן אוטומטי מהשעה {form.start_time ? formatTime(form.start_time) : '--:--'} ועד {form.end_time ? formatTime(form.end_time) : '--:--'}. רק חיילים בסטטוס התואם יוכלו לראות ולהירשם לרשימה בפורטל שלהם.
-                    </p>
-                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', margin: 0, lineHeight: 1.4 }}>
+                    <AlertTriangle size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} />
+                    ייוצרו אוטומטית לפי היעדים והזמנים הנבחרים.
+                  </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end', marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 24, flexShrink: 0 }}>
-                  <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '14px 28px', borderRadius: 12, fontWeight: 700 }}>ביטול</Button>
-                  <Button onClick={publishEvent} disabled={saving} style={{ padding: '14px 40px', borderRadius: 12, fontWeight: 800, fontSize: '1.05rem', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-                    {saving ? '⏳ מייצר רשימה...' : 'צור ושחרר לשיבוץ 🚀'}
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                  <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: '0.9rem' }}>ביטול</Button>
+                  <Button onClick={publishEvent} disabled={saving} style={{ padding: '8px 24px', borderRadius: 10, fontWeight: 800, fontSize: '0.9rem' }}>
+                    {saving ? 'מייצר...' : 'צור רשימה 🚀'}
                   </Button>
                 </div>
               </div>
