@@ -44,6 +44,17 @@ const EQUIPMENT_ITEMS = [
   { id: 'erkat_niqquoy', label: 'ערכת כלי ניקוי', type: 'boolean' },
 ];
 
+const REAR_ROTATION_DATES = ['22.3', '23.3', '24.3', '25.3', '26.3', '27.3', '28.3', '29.3', '30.3', '31.3', '1.4', '2.4', '3.4', '4.4'];
+const REAR_ROTATION_DAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const REAR_ROTATION_DATA = [
+  { name: 'ווילי', status: ['יוצא הביתה', 'בבית', 'בבית', 'בבית', 'חוזר', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'יוצא הביתה'] },
+  { name: 'לסלו', status: ['בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'יוצא הביתה', 'בבית', 'בבית', 'בבית', 'חוזר', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס'] },
+  { name: 'ליבוביץ', status: ['יוצא הביתה', 'בבית', 'בבית', 'חוזר', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'יוצא הביתה'] },
+  { name: 'טורקלטאוב', status: ['יוצא הביתה', 'חוזר', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'יוצא הביתה', 'בבית', 'בבית', 'בבית', 'חוזר', 'בבסיס'] },
+  { name: 'ברטוב', status: ['בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'יוצא הביתה', 'בבית', 'בבית', 'בבית', 'בבית', 'חוזר', 'בבסיס'] },
+  { name: 'נחום ליס', status: ['בבסיס', 'בבסיס', 'בבסיס', 'יוצא הביתה', 'בבית', 'בבית', 'בבית', 'חוזר', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס', 'בבסיס'] }
+];
+
 export default function SoldierPortalPage() {
   const params = useParams();
   const token = params.token as string;
@@ -686,6 +697,77 @@ export default function SoldierPortalPage() {
                 )}
               </div>
             </div>
+
+
+            {/* Rear Rotation Table (Only for specific soldiers) */}
+            {soldier && REAR_ROTATION_DATA.some(r => soldier.full_name.includes(r.name)) && (
+              <div className="card" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Calendar size={18} className="text-muted" /> סבב יציאות עורף
+                </h3>
+                <div style={{ overflowX: 'auto', margin: '0 -16px', padding: '0 16px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'center' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ padding: '8px', borderBottom: '2px solid var(--border)', background: 'var(--bg-surface)', position: 'sticky', right: 0, zIndex: 10 }}>שם</th>
+                        {REAR_ROTATION_DATES.map((d, i) => (
+                          <th key={i} style={{ padding: '8px', borderBottom: '2px solid var(--border)', minWidth: 40, background: i >= 7 ? 'rgba(var(--accent-rgb), 0.05)' : 'transparent' }}>
+                            <div style={{ opacity: 0.6, fontSize: '0.65rem' }}>{REAR_ROTATION_DAYS[i]}</div>
+                            {d}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {REAR_ROTATION_DATA.map((row, idx) => {
+                        const isCurrent = soldier.full_name.includes(row.name);
+                        return (
+                          <tr key={idx} style={{ 
+                            background: isCurrent ? 'rgba(var(--accent-rgb), 0.1)' : 'transparent',
+                            fontWeight: isCurrent ? 800 : 400
+                          }}>
+                            <td style={{ 
+                              padding: '10px 8px', borderBottom: '1px solid var(--border)', 
+                              position: 'sticky', right: 0, 
+                              background: isCurrent ? 'var(--accent)' : 'var(--bg-surface)',
+                              color: isCurrent ? 'white' : 'inherit',
+                              zIndex: 5,
+                              fontWeight: 800
+                            }}>
+                              {row.name}
+                            </td>
+                            {row.status.map((st, i) => {
+                              let cellBg = 'transparent';
+                              let cellColor = 'inherit';
+                              if (st === 'בבית' || st === 'יוצא הביתה') {
+                                cellBg = 'rgba(46, 204, 113, 0.15)';
+                                cellColor = '#27ae60';
+                              } else if (st === 'חוזר') {
+                                cellBg = 'rgba(241, 196, 15, 0.15)';
+                                cellColor = '#f39c12';
+                              }
+                              
+                              return (
+                                <td key={i} style={{ 
+                                  padding: '10px 4px', borderBottom: '1px solid var(--border)',
+                                  background: cellBg, color: cellColor, fontSize: '0.65rem',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  {st === 'יוצא הביתה' ? 'בית' : st === 'בבית' ? 'בית' : st === 'חוזר' ? 'חוזר' : st === 'בבסיס' ? 'בסיס' : st}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 12, textAlign: 'center' }}>
+                  * הטבלה מציגה את הסבב המתוכנן לשבועיים הקרובים.
+                </p>
+              </div>
+            )}
 
 
               {/* Media Uploads */}
