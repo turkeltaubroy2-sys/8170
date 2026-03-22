@@ -26,10 +26,11 @@ export default function StaffRequests() {
       .select('*, soldiers(full_name, phone, departments(name, icon))')
       .order('created_at', { ascending: false });
     
-    // Normalize status 'pending' to 'פתוח' for local consistency
+    // Normalize status 'pending' to 'פתוח' and 'rotation' to 'סבבי יציאות'
     const normalized = (data || []).map(r => ({
       ...r,
-      status: r.status === 'pending' ? 'פתוח' : r.status
+      status: r.status === 'pending' ? 'פתוח' : r.status,
+      type: r.type === 'rotation' ? 'סבבי יציאות' : r.type
     }));
     
     setRequests(normalized);
