@@ -589,7 +589,7 @@ export default function SoldierPortalPage() {
                         await supabase.from('requests').insert({
                           soldier_id: soldier.id,
                           title: 'בקשות יציאה סבב לבנון',
-                          type: 'rotation',
+                          type: 'סבבי יציאות',
                           status: 'פתוח',
                           description: `תאריכים: ${sortedDates}\n\nסיבה: ${rotationNote}`
                         });
