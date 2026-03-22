@@ -215,20 +215,20 @@ export default function StaffPage() {
           subtitle="מצב כוחות בזמן אמת" 
           badge="סגל בלבד"
           actions={(
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div className="header-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {activeTab === 'overview' && (
                 <Button variant="secondary" size="sm" onClick={exportCSV} disabled={refreshing}>
-                  <Download size={14} /> ייצוא לאקסל
+                  <Download size={14} /> <span className="hide-mobile">ייצוא</span>
                 </Button>
               )}
               <Button variant="primary" size="sm" onClick={() => {
                 setNewSoldier(prev => ({ ...prev, password: Math.random().toString(36).slice(-8) }));
                 setShowAddModal(true);
               }}>
-                ➕ הוסף חייל
+                ➕ <span className="hide-mobile">חייל חדש</span>
               </Button>
               <Button variant="secondary" size="sm" onClick={fetchAll} disabled={refreshing}>
-                <RefreshCcw size={14} className={refreshing ? "spinner" : ""} /> {refreshing ? 'מרענן' : 'רענן'}
+                <RefreshCcw size={14} className={refreshing ? "spinner" : ""} />
               </Button>
             </div>
           )}
@@ -251,13 +251,26 @@ export default function StaffPage() {
               {tab.icon} {tab.label}
             </button>
           ))}
-          <Link 
-            href="/staff/messages"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text)', fontSize: '1rem', paddingBottom: 10, borderBottom: '3px solid transparent' }}
-          >
-            <Send size={16} /> לוח מודעות
-          </Link>
-        </div>
+            <Link 
+              href="/staff/messages"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text)', fontSize: '1rem', paddingBottom: 10, borderBottom: '3px solid transparent' }}
+              className="tab-item"
+            >
+              <Send size={16} /> לוח מודעות
+            </Link>
+          </div>
+
+          <style jsx>{`
+            @media (max-width: 600px) {
+              .header-actions :global(span.hide-mobile) {
+                display: none;
+              }
+              .tab-menu {
+                 display: grid !important;
+                 grid-template-columns: repeat(2, 1fr) !important;
+              }
+            }
+          `}</style>
 
         <div className="page-body">
           {activeTab === 'requests' && <StaffRequests />}

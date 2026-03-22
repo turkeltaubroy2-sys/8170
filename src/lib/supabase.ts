@@ -108,7 +108,7 @@ export type SoldierRequest = {
   status: string;
   created_at: string;
   updated_at: string;
-  soldiers?: Pick<Soldier, 'full_name' | 'departments'>;
+  soldiers?: Pick<Soldier, 'full_name' | 'phone' | 'departments'>;
 };
 
 export type FormField = {
