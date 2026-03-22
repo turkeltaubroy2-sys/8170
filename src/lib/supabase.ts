@@ -27,6 +27,7 @@ export type Soldier = {
   password?: string;
   created_at: string;
   departments?: Department;
+  soldier_portals?: SoldierPortal;
 };
 
 export type SoldierPortal = {
@@ -154,6 +155,8 @@ export type GuardEvent = {
   location: string;
   start_time: string;
   end_time: string;
+  shift_duration: number;
+  target_status: string;
   status: 'draft' | 'published' | 'completed';
   created_at: string;
   guard_shifts?: GuardShift[];
@@ -161,10 +164,12 @@ export type GuardEvent = {
 
 export type GuardShift = {
   id: string;
-  event_id: string;
+  guard_event_id: string;
   soldier_id: string | null;
+  requested_by_id: string | null;
   start_time: string;
   end_time: string;
   created_at: string;
   soldiers?: Pick<Soldier, 'full_name'>;
+  requested_by?: Pick<Soldier, 'full_name'>;
 };

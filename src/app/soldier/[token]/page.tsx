@@ -101,35 +101,15 @@ export default function SoldierPortalPage() {
       .order('created_at', { ascending: false });
     if (messagesData) setMessages(messagesData);
 
-    const { data: portalData } = await supabase.from('soldier_portals').select('*').eq('soldier_id', soldierData.id).single();
-
-    if (portalData) {
-      setPortal(portalData);
-      
-      let parsedEquip = {};
-      if (portalData.equipment_notes) {
-        try {
-          // If it starts with {, it's likely our JSON
-          if (portalData.equipment_notes.startsWith('{')) {
-            parsedEquip = JSON.parse(portalData.equipment_notes);
-          }
-        } catch (e) {}
-      }
-
-      setForm({
-        health_declaration: portalData.health_declaration || 'תקין',
-        personal_notes: portalData.personal_notes || '',
-        equipment: parsedEquip
-      });
-      if (parsedEquip && Object.keys(parsedEquip).length > 0) {
-        setIsEditingEquip(false);
-      } else {
-        setIsEditingEquip(true);
-      }
-    } else {
-      // Create portal entry
-      await supabase.from('soldier_portals').insert({ soldier_id: soldierData.id, status: 'בבית', health_declaration: 'תקין' });
+    if (eventsData && soldierData) {
+      const { data: portal } = await supabase.from('soldier_portals').select('status').eq('soldier_id', soldierData.id).single();
+      const sStatus = portal?.status || 'בבית';
+      const filtered = (eventsData as any[]).filter(ev => 
+        ev.target_status === 'all' || ev.target_status === sStatus
+      );
+      setGuardEvents(filtered);
     }
+
     setLoading(false);
   }, [token]);
 
@@ -144,6 +124,7 @@ export default function SoldierPortalPage() {
     id: string;
     location: string;
     start_time: string;
+    target_status: string;
     guard_shifts: GuardShift[];
   }
 
@@ -395,26 +376,28 @@ export default function SoldierPortalPage() {
                           </span>
 
                           {isMe ? (
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#27ae60' }}>🛡️ המשמרת שלך</span>
-                          ) : isTaken ? (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>נתפס</span>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#27ae60' }}>🛡️ שובצת למשמרת</span>
+                          ) : shift.requested_by_id === soldier?.id ? (
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f39c12' }}>⏳ בקשתך ממתינה</span>
+                          ) : isTaken || shift.requested_by_id ? (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>נתפס / ממתין לאישור</span>
                           ) : (
                             <button
                               className="btn btn-primary btn-sm"
                               disabled={saving}
                               onClick={async () => {
-                                if (!confirm('האם אתה בטוח שברצונך להשתבץ למשמרת זו? לא ניתן לבטל אחרי השיבוץ.')) return;
+                                if (!confirm('האם אתה בטוח שברצונך לבקש להשתבץ למשמרת זו?')) return;
                                 setSaving(true);
-                                await supabase.from('guard_shifts').update({ soldier_id: soldier?.id }).eq('id', shift.id);
+                                await supabase.from('guard_shifts').update({ requested_by_id: soldier?.id }).eq('id', shift.id);
 
                                 setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
                                   ...e,
-                                  guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, soldier_id: soldier?.id || null } : s)
+                                  guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: soldier?.id || null } : s)
                                 } : e));
                                 setSaving(false);
                               }}
                             >
-                              שבץ אותי
+                              בקש שיבוץ
                             </button>
                           )}
                         </div>
