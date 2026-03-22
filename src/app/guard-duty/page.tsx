@@ -45,17 +45,18 @@ export default function GuardDutyPage() {
   const fetchData = useCallback(async () => {
     try {
       const [evs, sols] = await Promise.all([
-        supabase.from('guard_events').select('*, guard_shifts(*, soldiers(full_name), requested_by:requested_by_id(full_name))').order('created_at', { ascending: false }),
+        supabase.from('guard_events')
+          .select('*, guard_shifts(*, soldiers:soldier_id(full_name), requester:requested_by_id(full_name))')
+          .order('created_at', { ascending: false }),
         supabase.from('soldiers').select('*, soldier_portals(status)').order('full_name')
       ]);
       
       if (evs.error) {
         console.error('Error fetching events:', evs.error);
-        // Try a simpler fetch if the complex join fails
         const simpleEvs = await supabase.from('guard_events').select('*, guard_shifts(*)').order('created_at', { ascending: false });
         if (simpleEvs.data) setEvents(simpleEvs.data as any);
       } else if (evs.data) {
-        setEvents(evs.data);
+        setEvents(evs.data as any);
       }
       
       if (sols.error) console.error('Error fetching soldiers:', sols.error);
@@ -189,9 +190,12 @@ export default function GuardDutyPage() {
                               <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{ev.location}</h3>
                               <Badge style={{ 
                                 background: ev.target_status === 'בפנים' ? '#e74c3c22' : ev.target_status === 'עורף' ? '#2980b922' : 'var(--bg-card)',
-                                color: ev.target_status === 'בפנים' ? '#e74c3c' : ev.target_status === 'עורף' ? '#2980b9' : 'var(--text-dim)'
+                                color: ev.target_status === 'בפנים' ? '#e74c3c' : ev.target_status === 'עורף' ? '#2980b9' : 'var(--text-dim)',
+                                whiteSpace: 'nowrap',
+                                display: 'inline-flex',
+                                alignItems: 'center'
                               }}>יעד: {ev.target_status === 'all' ? 'כולם' : ev.target_status}</Badge>
-                              {pendingCount > 0 && <Badge style={{ background: '#f39c1222', color: '#f39c12' }}><Clock size={12} style={{marginLeft: 4}}/> {pendingCount} בקשות פתוחות</Badge>}
+                              {pendingCount > 0 && <Badge style={{ background: '#f39c1222', color: '#f39c12', whiteSpace: 'nowrap' }}><Clock size={12} style={{marginLeft: 4}}/> {pendingCount} בקשות פתוחות</Badge>}
                             </div>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: 4 }}>
                               {formatDate(ev.start_time)} • {formatTime(ev.start_time)} - {formatTime(ev.end_time)} | משמרת: {ev.shift_duration} דק'
@@ -217,11 +221,11 @@ export default function GuardDutyPage() {
                                 <td style={{ padding: '12px 16px' }}>
                                   {shift.soldier_id ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--success)', fontWeight: 600 }}>
-                                      <CheckCircle size={14} /> {shift.soldiers?.full_name}
+                                      <CheckCircle size={14} /> {(shift as any).soldiers?.full_name}
                                     </div>
                                   ) : shift.requested_by_id ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                      <Badge style={{ background: '#f39c1222', color: '#f39c12' }}>בקשה: {shift.requested_by?.full_name}</Badge>
+                                      <Badge style={{ background: '#f39c1222', color: '#f39c12' }}>בקשה: {(shift as any).requester?.full_name || 'חייל'}</Badge>
                                       <Button variant="primary" size="sm" onClick={() => confirmRequest(shift)} style={{ fontSize: '0.75rem', padding: '2px 8px' }}>אשר</Button>
                                     </div>
                                   ) : (
@@ -267,49 +271,56 @@ export default function GuardDutyPage() {
               
               <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
-                    <MapPin size={18} className="text-muted" /> מיקום / שם עמדה
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
+                    <MapPin size={18} style={{ color: 'var(--primary)' }} /> מיקום / שם עמדה
                   </label>
                   <input 
                     className="form-input" 
                     value={form.location} 
                     onChange={e => setForm(f => ({ ...f, location: e.target.value }))} 
                     placeholder='למשל: ד.ג מזרחי, ש"ג ראשי...' 
-                    style={{ fontSize: '1.1rem', padding: '12px 16px' }}
+                    style={{ fontSize: '1.1rem', padding: '12px 16px', fontWeight: 600 }}
                   />
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
-                      <Clock size={18} className="text-muted" /> שעת התחלה
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Clock size={18} style={{ color: 'var(--primary)' }} /> שעת התחלה
                     </label>
-                    <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
+                    <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} style={{ padding: '12px' }} />
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
-                      <Clock size={18} className="text-muted" /> שעת סיום
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Clock size={18} style={{ color: 'var(--primary)' }} /> שעת סיום
                     </label>
-                    <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
+                    <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} style={{ padding: '12px' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
-                      <Clock size={18} className="text-muted" /> משך משמרת (בדקות)
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Clock size={18} style={{ color: 'var(--primary)' }} /> משך משמרת (דק')
                     </label>
-                    <input 
-                      type="number" 
-                      className="form-input" 
-                      value={form.shift_duration} 
-                      onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) || 0 }))}
-                      min="1"
-                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={form.shift_duration} 
+                        onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) || 0 }))}
+                        min="1"
+                        style={{ flex: 1, textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <button onClick={() => setForm(f => ({ ...f, shift_duration: f.shift_duration + 30 }))} style={{ border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem', cursor: 'pointer' }}>+30</button>
+                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, f.shift_duration - 30) }))} style={{ border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem', cursor: 'pointer' }}>-30</button>
+                      </div>
+                    </div>
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
-                      <Users size={18} className="text-muted" /> יעד הרשימה
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
+                      <Users size={18} style={{ color: 'var(--primary)' }} /> יעד הרשימה
                     </label>
                     <Select 
                       value={form.target_status} 
@@ -319,7 +330,7 @@ export default function GuardDutyPage() {
                         { value: 'בפנים', label: '🔥 בפנים' },
                         { value: 'עורף', label: '🛡️ עורף' },
                       ]}
-                      style={{ height: '45px' }}
+                      style={{ height: '48px', fontSize: '1rem', fontWeight: 600 }}
                     />
                   </div>
                 </div>
