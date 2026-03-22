@@ -7,7 +7,7 @@ import { Download, RefreshCcw, LayoutDashboard, Send, FileText, AlertTriangle, S
 import Image from 'next/image';
 import Link from 'next/link';
 import StaffRequests from '@/components/StaffRequests';
-import StaffDatabases from '@/components/StaffDatabases';
+import StaffForms from '@/components/StaffForms';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
@@ -86,7 +86,7 @@ export default function StaffPage() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'table' | 'cards'>('cards');
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'databases'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
   const [selectedSoldier, setSelectedSoldier] = useState<SoldierWithPortal | null>(null);
   const [showEquipModal, setShowEquipModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -238,7 +238,7 @@ export default function StaffPage() {
           {[
             { tag: 'overview', icon: <LayoutDashboard size={16} />, label: 'מצב כוחות' },
             { tag: 'requests', icon: <Send size={16} />, label: 'פניות חיילים' },
-            { tag: 'databases', icon: <Database size={16} />, label: 'מאגרי מידע' },
+            { tag: 'forms', icon: <FileText size={16} />, label: 'דוח 1 ושאלונים' },
           ].map(tab => (
             <button key={tab.tag}
               style={{ 
@@ -246,7 +246,7 @@ export default function StaffPage() {
                 fontWeight: activeTab === tab.tag ? 600 : 400, color: activeTab === tab.tag ? 'var(--primary)' : 'var(--text)', 
                 borderBottom: activeTab === tab.tag ? '3px solid var(--primary)' : '3px solid transparent' 
               }}
-              onClick={() => setActiveTab(tab.tag as 'overview' | 'requests' | 'databases')}
+              onClick={() => setActiveTab(tab.tag as 'overview' | 'requests' | 'forms')}
             >
               {tab.icon} {tab.label}
             </button>
@@ -261,7 +261,7 @@ export default function StaffPage() {
 
         <div className="page-body">
           {activeTab === 'requests' && <StaffRequests />}
-          {activeTab === 'databases' && <StaffDatabases />}
+          {activeTab === 'forms' && <StaffForms />}
           
           {activeTab === 'overview' && (
             <>

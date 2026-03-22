@@ -6,8 +6,9 @@ import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift } from 
 import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell, Calendar, Camera } from 'lucide-react';
 import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
-import SoldierForms from '@/components/SoldierForms';
+import SoldierDatabases from '@/components/SoldierDatabases';
 import { Button } from '@/components/ui/Button';
+import { Database } from 'lucide-react';
 
 const STATUSES = ['בבית', 'עורף', 'בפנים'];
 const HEALTH = ['תקין', 'חלש', 'פצוע', 'בבית חולים', 'פטור רפואי'];
@@ -53,7 +54,7 @@ export default function SoldierPortalPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'forms' | 'guard' | 'equipment' | 'messages'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'databases' | 'guard' | 'equipment' | 'messages'>('status');
   const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
@@ -293,11 +294,11 @@ export default function SoldierPortalPage() {
             <Send size={16} /> פניות
           </button>
           <button
-            className={activeTab === 'forms' ? 'active' : ''}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'forms' ? 'var(--accent)' : 'var(--text-muted)' }}
-            onClick={() => setActiveTab('forms')}
+            className={activeTab === 'databases' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'databases' ? 'var(--accent)' : 'var(--text-muted)' }}
+            onClick={() => setActiveTab('databases')}
           >
-            <FileText size={16} /> שאלונים
+            <Database size={16} /> מאגרי מידע
           </button>
           <button
             className={activeTab === 'guard' ? 'active' : ''}
@@ -332,7 +333,7 @@ export default function SoldierPortalPage() {
         )}
 
         {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} />}
-        {activeTab === 'forms' && soldier && <SoldierForms soldierId={soldier.id} />}
+        {activeTab === 'databases' && soldier && <SoldierDatabases />}
 
         {activeTab === 'messages' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
