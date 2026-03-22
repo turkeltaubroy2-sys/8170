@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
-import { Download, RefreshCcw, LayoutDashboard, Send, FileText, AlertTriangle, Search, Database } from 'lucide-react';
+import { Download, RefreshCcw, LayoutDashboard, Send, FileText, Search, ImageIcon, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import StaffRequests from '@/components/StaffRequests';
@@ -33,6 +33,7 @@ type SoldierWithPortal = {
     equipment_notes: string;
     personal_notes: string;
     updated_at: string;
+    media_urls?: string[];
   };
 };
 
@@ -89,6 +90,7 @@ export default function StaffPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
   const [selectedSoldier, setSelectedSoldier] = useState<SoldierWithPortal | null>(null);
   const [showEquipModal, setShowEquipModal] = useState(false);
+  const [showMediaModal, setShowMediaModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newSoldier, setNewSoldier] = useState({
     full_name: '',
@@ -134,7 +136,7 @@ export default function StaffPage() {
     setRefreshing(true);
     const [depsRes, soldiersRes] = await Promise.all([
       supabase.from('departments').select('id, name, icon').order('order'),
-      supabase.from('soldiers').select('*, departments(name,icon), soldier_portals(status,health_declaration,equipment_notes,personal_notes,updated_at)').order('full_name'),
+      supabase.from('soldiers').select('*, departments(name,icon), soldier_portals(status,health_declaration,equipment_notes,personal_notes,media_urls,updated_at)').order('full_name'),
     ]);
     setDepartments(depsRes.data || []);
     setSoldiers(soldiersRes.data || []);
@@ -172,7 +174,7 @@ export default function StaffPage() {
     const rows = filtered.map(s => {
       let equipment: Record<string, any> = {};
       if (s.soldier_portals?.equipment_notes && s.soldier_portals.equipment_notes.startsWith('{')) {
-        try { equipment = JSON.parse(s.soldier_portals.equipment_notes); } catch(e) {}
+        try { equipment = JSON.parse(s.soldier_portals.equipment_notes); } catch { }
       }
       return [
         s.full_name || '',
@@ -337,6 +339,7 @@ export default function StaffPage() {
                         <th>בריאות</th>
                         <th>פק&quot;לים</th>
                         <th>כשירות ציוד</th>
+                        <th>מדיה מהשטח</th>
                         <th>עדכון אחרון</th>
                         <th>לינק</th>
                       </tr>
@@ -413,7 +416,7 @@ export default function StaffPage() {
                                   if (s.soldier_portals.equipment_notes.startsWith('{')) {
                                     equipment = JSON.parse(s.soldier_portals.equipment_notes);
                                   }
-                                } catch(e) {}
+                                } catch { }
                                 
                                 const count = EQUIPMENT_ITEMS.filter(i => {
                                   const v = equipment[i.id];
@@ -433,6 +436,18 @@ export default function StaffPage() {
                             ) : '—'}
                             {s.soldier_portals?.personal_notes && (
                               <p style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--text-dim)' }}>💬 {s.soldier_portals.personal_notes.slice(0, 30)}</p>
+                            )}
+                          </td>
+                          <td>
+                            {s.soldier_portals?.media_urls && s.soldier_portals.media_urls.length > 0 ? (
+                              <button 
+                                onClick={() => { setSelectedSoldier(s); setShowMediaModal(true); }}
+                                style={{ background: 'var(--primary)11', border: '1px solid var(--primary)33', borderRadius: 8, padding: '4px 8px', color: 'var(--primary)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+                              >
+                                <ImageIcon size={14} /> {s.soldier_portals.media_urls.length} קבצים
+                              </button>
+                            ) : (
+                              <span style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>אין מדיה</span>
                             )}
                           </td>
                           <td style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>{formatTime(s.soldier_portals?.updated_at)}</td>
@@ -497,7 +512,7 @@ export default function StaffPage() {
                                      if (s.soldier_portals?.equipment_notes?.startsWith('{')) {
                                        equipment = JSON.parse(s.soldier_portals.equipment_notes);
                                      }
-                                   } catch(e) {}
+                                   } catch { }
                                    
                                    const count = EQUIPMENT_ITEMS.filter(i => {
                                      const v = equipment[i.id];
@@ -517,6 +532,14 @@ export default function StaffPage() {
                                    );
                                  })()}
                               </div>
+                              {s.soldier_portals.media_urls && s.soldier_portals.media_urls.length > 0 && (
+                                <button 
+                                  onClick={() => { setSelectedSoldier(s); setShowMediaModal(true); }}
+                                  style={{ marginTop: 4, background: 'var(--primary)11', border: '1px solid var(--primary)33', borderRadius: 10, padding: '8px 12px', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', width: '100%' }}
+                                >
+                                  <ImageIcon size={16} /> צפה במדיה מהשטח ({s.soldier_portals.media_urls.length})
+                                </button>
+                              )}
                             </div>
                           ) : <Badge variant="gray" style={{width: 'fit-content', marginTop: 6}}>לא עדכן</Badge>}
                       </div>
@@ -553,7 +576,7 @@ export default function StaffPage() {
                     if (selectedSoldier.soldier_portals?.equipment_notes?.startsWith('{')) {
                       equipment = JSON.parse(selectedSoldier.soldier_portals.equipment_notes);
                     }
-                  } catch(e) {}
+                  } catch { }
                   
                   return EQUIPMENT_ITEMS.map(i => {
                     const val = equipment[i.id];
@@ -572,6 +595,51 @@ export default function StaffPage() {
                     );
                   });
                 })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Media Modal */}
+        {showMediaModal && selectedSoldier && (
+          <div style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.92)', 
+            zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 
+          }}>
+            <div className="card" style={{ maxWidth: 800, width: '100%', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-surface)', color: 'var(--text)', padding: 24, borderRadius: 20, boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent)' }}>🖼️ מדיה מהשטח</h2>
+                  <p style={{ margin: 0, color: 'var(--text-muted)' }}>{selectedSoldier.full_name} · {selectedSoldier.rank}</p>
+                </div>
+                <Button variant="secondary" onClick={() => setShowMediaModal(false)} style={{ borderRadius: '50%', width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={20} />
+                </Button>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                {(selectedSoldier.soldier_portals?.media_urls || []).map((url, i) => (
+                  <div key={i} style={{ borderRadius: 12, overflow: 'hidden', background: '#000', border: '1px solid var(--border)', position: 'relative', aspectRatio: '4/3' }}>
+                    {url.match(/\.(mp4|webm|ogg|mov)$/) ? (
+                      <video src={url} controls style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <div style={{ cursor: 'pointer' }} onClick={() => window.open(url, '_blank')}>
+                         <Image src={url} alt="" fill className="object-contain" unoptimized />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {(!selectedSoldier.soldier_portals?.media_urls || selectedSoldier.soldier_portals.media_urls.length === 0) && (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-dim)' }}>
+                  <ImageIcon size={48} style={{ marginBottom: 12, opacity: 0.3 }} />
+                  <p>אין קבצי מדיה להצגה</p>
+                </div>
+              )}
+
+              <div style={{ marginTop: 24, textAlign: 'center' }}>
+                <Button variant="secondary" onClick={() => setShowMediaModal(false)} style={{ minWidth: 120 }}>סגור חלונית</Button>
               </div>
             </div>
           </div>

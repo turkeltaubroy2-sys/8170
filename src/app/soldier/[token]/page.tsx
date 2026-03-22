@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift } from '@/lib/supabase';
-import { MapPin, Stethoscope, Backpack, FileText, Shield, Send, Bell, Calendar, Camera } from 'lucide-react';
+import { MapPin, Backpack, Shield, Send, Bell, Calendar, Camera, X, Image as ImageIcon, Plus } from 'lucide-react';
 import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierDatabases from '@/components/SoldierDatabases';
@@ -11,8 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Database } from 'lucide-react';
 
-const STATUSES = ['בבית', 'עורף', 'בפנים'];
-const HEALTH = ['תקין', 'חלש', 'פצוע', 'בבית חולים', 'פטור רפואי'];
+
 
 const EQUIPMENT_ITEMS = [
   { id: 'massa_90l', label: 'מנשא 90 ליטר', type: 'boolean' },
@@ -61,7 +60,8 @@ export default function SoldierPortalPage() {
   const [form, setForm] = useState({
     health_declaration: 'תקין',
     personal_notes: '',
-    equipment: {} as Record<string, any>
+    equipment: {} as Record<string, any>,
+    media_urls: [] as string[]
   });
   const [isEditingEquip, setIsEditingEquip] = useState(true);
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
@@ -103,8 +103,17 @@ export default function SoldierPortalPage() {
     if (messagesData) setMessages(messagesData);
 
     if (eventsData && soldierData) {
-      const { data: portal } = await supabase.from('soldier_portals').select('status').eq('soldier_id', soldierData.id).single();
-      const sStatus = portal?.status || 'בבית';
+      const { data: portalData } = await supabase.from('soldier_portals').select('*').eq('soldier_id', soldierData.id).single();
+      setPortal(portalData);
+      if (portalData) {
+        setForm({
+          health_declaration: portalData.health_declaration || 'תקין',
+          personal_notes: portalData.personal_notes || '',
+          equipment: portalData.equipment_notes ? JSON.parse(portalData.equipment_notes) : {},
+          media_urls: Array.isArray(portalData.media_urls) ? portalData.media_urls : []
+        });
+      }
+      const sStatus = portalData?.status || 'בבית';
       const filtered = (eventsData as any[]).filter(ev => 
         ev.target_status === 'all' || ev.target_status === sStatus
       );
@@ -137,6 +146,7 @@ export default function SoldierPortalPage() {
       health_declaration: form.health_declaration,
       personal_notes: form.personal_notes,
       equipment_notes: JSON.stringify(form.equipment),
+      media_urls: form.media_urls,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'soldier_id' });
 
@@ -146,7 +156,49 @@ export default function SoldierPortalPage() {
     setSaving(false);
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !soldier) return;
+
+    setSaving(true);
+    const newUrls = [...form.media_urls];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${soldier.id}-${Date.now()}-${i}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media-gallery')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media-gallery')
+          .getPublicUrl(filePath);
+
+        newUrls.push(publicUrl);
+      }
+
+      setForm(f => ({ ...f, media_urls: newUrls }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Error uploading media:', err);
+      alert('שגיאה בהעלאת המדיה.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeMedia = (url: string) => {
+    setForm(f => ({ ...f, media_urls: f.media_urls.filter(u => u !== url) }));
+  };
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !soldier) return;
 
@@ -231,7 +283,7 @@ export default function SoldierPortalPage() {
                 />
                 <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   <Camera size={16} />
-                  <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} disabled={saving} />
+                  <input type="file" accept="image/*" hidden onChange={handleProfilePhotoUpload} disabled={saving} />
                 </label>
               </div>
             ) : (
@@ -239,7 +291,7 @@ export default function SoldierPortalPage() {
                 {soldier?.full_name.charAt(0)}
                 <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   <Camera size={16} />
-                  <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} disabled={saving} />
+                  <input type="file" accept="image/*" hidden onChange={handleProfilePhotoUpload} disabled={saving} />
                 </label>
               </div>
             )}
@@ -632,13 +684,42 @@ export default function SoldierPortalPage() {
             </div>
 
 
-              {/* Notes */}
+              {/* Media Uploads */}
               <div className="card" style={{ marginBottom: 24 }}>
                 <h3 style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText size={18} className="text-muted" /> הערות אישיות
+                  <ImageIcon size={18} className="text-muted" /> מדיה מהשטח
                 </h3>
-                <textarea className="form-textarea" value={form.personal_notes} onChange={e => setForm(f => ({ ...f, personal_notes: e.target.value }))}
-                  placeholder="כל מה שתרצה לציין..." rows={3} />
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12, marginBottom: 16 }}>
+                  {form.media_urls.map((url, i) => (
+                    <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-surface)' }}>
+                      {url.match(/\.(mp4|webm|ogg|mov)$/) ? (
+                        <video src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <Image src={url} alt="" fill className="object-cover" unoptimized />
+                      )}
+                      <button 
+                        type="button"
+                        onClick={() => removeMedia(url)}
+                        style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(231, 76, 60, 0.8)', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10 }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  <label style={{ 
+                    aspectRatio: '1', border: '2px dashed var(--border)', borderRadius: 8, display: 'flex', flexDirection: 'column', 
+                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4, color: 'var(--text-dim)', transition: 'all 0.2s' 
+                  }}>
+                    <Plus size={24} />
+                    <span style={{ fontSize: '0.75rem' }}>הוסף</span>
+                    <input type="file" accept="image/*,video/*" multiple hidden onChange={uploadMedia} disabled={saving} />
+                  </label>
+                </div>
+
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  ניתן להעלות תמונות או סרטונים מהשטח (מומלץ לצלם אופקית).
+                </p>
               </div>
 
               <button className="btn btn-primary" onClick={save} disabled={saving} style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: '1rem' }}>
