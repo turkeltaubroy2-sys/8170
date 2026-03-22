@@ -106,12 +106,16 @@ export default function SoldierPortalPage() {
       const { data: portalData } = await supabase.from('soldier_portals').select('*').eq('soldier_id', soldierData.id).single();
       setPortal(portalData);
       if (portalData) {
+        const equipment = portalData.equipment_notes ? JSON.parse(portalData.equipment_notes) : {};
         setForm({
           health_declaration: portalData.health_declaration || 'תקין',
           personal_notes: portalData.personal_notes || '',
-          equipment: portalData.equipment_notes ? JSON.parse(portalData.equipment_notes) : {},
+          equipment,
           media_urls: Array.isArray(portalData.media_urls) ? portalData.media_urls : []
         });
+        if (portalData.equipment_notes && portalData.equipment_notes !== '{}') {
+          setIsEditingEquip(false);
+        }
       }
       const sStatus = portalData?.status || 'בבית';
       const filtered = (eventsData as any[]).filter(ev => 
