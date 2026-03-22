@@ -6,6 +6,12 @@ export const metadata: Metadata = {
   description: "פלטפורמת ניהול לוגיסטית לפלוגה 8170 - מילואים",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 import AuthWrapper from "@/components/AuthWrapper";
 
 export default function RootLayout({

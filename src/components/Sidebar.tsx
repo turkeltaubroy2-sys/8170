@@ -72,7 +72,13 @@ export default function Sidebar() {
         justifyContent: 'space-around', 
         alignItems: 'center', 
         padding: '8px 4px',
-        gap: 2
+        gap: 2,
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        zIndex: 1000
       }}>
         {mobileNavItems.slice(0, 5).map(item => (
           <Link 

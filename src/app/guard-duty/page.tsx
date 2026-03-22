@@ -149,9 +149,9 @@ export default function GuardDutyPage() {
   };
 
   return (
-    <div className="app-wrapper">
+    <div className="app-wrapper" style={{ width: '100%', overflowX: 'hidden' }}>
       <Sidebar />
-      <main className="main-content" style={{ padding: 'clamp(12px, 3vw, 24px)' }}>
+      <main className="main-content" style={{ padding: 'clamp(12px, 3vw, 24px)', width: '100%', overflowX: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
           <div>
             <h2 style={{ fontSize: 'clamp(1.1rem, 4.5vw, 1.5rem)', fontWeight: 800, color: 'var(--text)' }}>🛡️ ניהול שמירות</h2>
@@ -160,7 +160,7 @@ export default function GuardDutyPage() {
           <Button onClick={() => setShowModal(true)} style={{ width: 'auto', minWidth: '160px', padding: '10px 16px' }}>+ רשימה חדשה</Button>
         </div>
 
-        <div className="page-body">
+        <div className="page-body" style={{ padding: 0 }}>
           {loading ? <div className="loading-spinner"><div className="spinner" /></div> : (
             events.length === 0 ? (
               <Card style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-dim)' }}>
@@ -279,14 +279,16 @@ export default function GuardDutyPage() {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
-            padding: 'clamp(4px, 1.5vw, 16px)',
+            padding: 'clamp(8px, 2vw, 24px)',
             backdropFilter: 'blur(4px)',
             background: 'rgba(0,0,0,0.6)',
-            zIndex: 1000
+            zIndex: 1000,
+            position: 'fixed',
+            inset: 0
           }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
             <Card className="modal" style={{ 
               maxWidth: 500, 
-              width: '100%', 
+              width: '95%', 
               padding: 0, 
               overflow: 'hidden', 
               border: '1px solid var(--border)', 
@@ -295,7 +297,8 @@ export default function GuardDutyPage() {
               display: 'flex',
               flexDirection: 'column',
               borderRadius: 20,
-              animation: 'modalSlideUp 0.3s ease-out'
+              animation: 'modalSlideUp 0.3s ease-out',
+              margin: 'auto'
             }}>
               <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '16px 24px', color: 'var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <div>
@@ -307,9 +310,9 @@ export default function GuardDutyPage() {
                 <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', width: 32, height: 32, borderRadius: '50%', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
               
-              <div style={{ padding: 'clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
+              <div style={{ padding: 'clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', textAlign: 'right' }}>
                 <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
                     <MapPin size={16} style={{ color: 'var(--primary)' }} /> מיקום
                   </label>
                   <input 
@@ -317,28 +320,28 @@ export default function GuardDutyPage() {
                     value={form.location} 
                     onChange={e => setForm(f => ({ ...f, location: e.target.value }))} 
                     placeholder='ש"ג ראשי, סיור...' 
-                    style={{ fontSize: '0.95rem', padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface)' }}
+                    style={{ fontSize: '16px', padding: '10px 14px', borderRadius: 10, background: 'var(--bg-surface)' }}
                   />
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
                       <Clock size={16} /> התחלה
                     </label>
-                    <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} style={{ padding: '10px', borderRadius: 10, fontSize: '0.85rem' }} />
+                    <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} style={{ padding: '10px', borderRadius: 10, fontSize: '16px' }} />
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
                       <Clock size={16} /> סיום
                     </label>
-                    <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} style={{ padding: '10px', borderRadius: 10, fontSize: '0.85rem' }} />
+                    <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} style={{ padding: '10px', borderRadius: 10, fontSize: '16px' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16 }}>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
                       <Clock size={16} /> דקות לכל שומר
                     </label>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -347,16 +350,16 @@ export default function GuardDutyPage() {
                         className="form-input" 
                         value={form.shift_duration} 
                         onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) || 0 }))}
-                        style={{ textAlign: 'center', fontSize: '1.1rem', fontWeight: 800, padding: '8px', borderRadius: 10, width: '60px' }}
+                        style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 800, padding: '8px', borderRadius: 10, width: '70px' }}
                       />
                       <div style={{ display: 'flex', gap: 4 }}>
-                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) + 30) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 800 }}>+30</button>
-                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) - 30) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 800 }}>-30</button>
+                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) + 30) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 800 }}>+30</button>
+                        <button onClick={() => setForm(f => ({ ...f, shift_duration: Math.max(1, (parseInt(f.shift_duration as any) || 0) - 30) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 800 }}>-30</button>
                       </div>
                     </div>
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
                       <Users size={16} /> יעד
                     </label>
                     <Select 
@@ -367,7 +370,7 @@ export default function GuardDutyPage() {
                         { value: 'בפנים', label: '🔥 בפנים' },
                         { value: 'עורף', label: '🛡️ עורף' },
                       ]}
-                      style={{ height: '44px', fontSize: '0.9rem', fontWeight: 700, borderRadius: 10 }}
+                      style={{ height: '48px', fontSize: '16px', fontWeight: 700, borderRadius: 10 }}
                     />
                   </div>
                 </div>
@@ -375,8 +378,8 @@ export default function GuardDutyPage() {
                 {/* Summary Box */}
                 <div style={{ background: 'rgba(255,215,0,0.03)', borderRadius: 14, padding: 14, border: '1px solid rgba(255,215,0,0.15)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>משמרות שייווצרו:</span>
-                    <div style={{ background: 'var(--primary)', color: 'white', fontSize: '1.1rem', fontWeight: 900, padding: '2px 12px', borderRadius: 8 }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>משמרות שייווצרו:</span>
+                    <div style={{ background: 'var(--primary)', color: 'white', fontSize: '1.2rem', fontWeight: 900, padding: '2px 14px', borderRadius: 8 }}>
                       {(() => {
                         if (!form.start_time || !form.end_time || !form.shift_duration) return 0;
                         const s = new Date(form.start_time).getTime();
@@ -386,15 +389,15 @@ export default function GuardDutyPage() {
                       })()}
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', margin: 0, lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: 0, lineHeight: 1.4 }}>
                     <AlertTriangle size={14} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} />
                     ייוצרו אוטומטית לפי היעדים והזמנים הנבחרים.
                   </p>
                 </div>
 
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                  <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '8px 16px', borderRadius: 10, fontSize: '0.9rem' }}>ביטול</Button>
-                  <Button onClick={publishEvent} disabled={saving} style={{ padding: '8px 24px', borderRadius: 10, fontWeight: 800, fontSize: '0.9rem' }}>
+                  <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '10px 20px', borderRadius: 10, fontSize: '1rem' }}>ביטול</Button>
+                  <Button onClick={publishEvent} disabled={saving} style={{ padding: '10px 30px', borderRadius: 10, fontWeight: 800, fontSize: '1rem' }}>
                     {saving ? 'מייצר...' : 'צור רשימה 🚀'}
                   </Button>
                 </div>

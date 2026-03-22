@@ -44,12 +44,16 @@ body {
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* ============ LAYOUT ============ */
 .app-wrapper {
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .sidebar {
@@ -152,6 +156,7 @@ body {
   flex: 1;
   margin-right: 260px;
   min-height: 100vh;
+  width: calc(100% - 260px);
 }
 
 .page-header {
@@ -912,8 +917,9 @@ tr:hover td {
     display: flex;
   }
   .main-content {
-    margin-right: 0;
+    margin-right: 0 !important;
     padding-bottom: 70px; /* Space for bottom nav */
+    width: 100% !important;
   }
   .page-header {
     padding: 16px 20px;
