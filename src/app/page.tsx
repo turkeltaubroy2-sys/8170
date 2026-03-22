@@ -121,7 +121,7 @@ export default function Dashboard() {
             <Card title="⚡ גישה מהירה">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {[
-                  { href: '/personnel', icon: '👥', label: 'אנשי הפלוגה', desc: 'צפה בכל החיילים לפי מחלקות' },
+                  { href: '/personnel', icon: '👥', label: 'לוחמים', desc: 'צפה ונהל את לוחמי הפלוגה' },
                   { href: '/schedule', icon: '📅', label: 'לוח שנה', desc: 'נהל אירועים ולוז' },
                   { href: '/lists', icon: '📋', label: 'רשימות', desc: 'צור ועקוב אחר משימות' },
                   { href: '/media', icon: '📸', label: 'גלריה', desc: 'העלה תמונות וסרטונים' },

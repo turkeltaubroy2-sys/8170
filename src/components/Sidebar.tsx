@@ -1,5 +1,5 @@
 'use client';
-import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock, Bell } from 'lucide-react';
+import { Home, Calendar, ClipboardList, Users, Shield, Package, Image as ImageIcon, Clock, Bell, Send } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -7,10 +7,10 @@ const navItems = [
   { href: '/', icon: <Home size={18} />, label: 'ראשי' },
   { href: '/schedule', icon: <Calendar size={18} />, label: 'לו"ז' },
   { href: '/staff', icon: <Shield size={18} />, label: 'סגל' },
+  { href: '/staff/requests', icon: <Send size={18} />, label: 'פניות חיילים' },
   { href: '/guard-duty', icon: <Clock size={18} />, label: 'שמירות' },
   { href: '/lists', icon: <ClipboardList size={18} />, label: 'משימות' },
   { href: '/logistics', icon: <Package size={18} />, label: 'לוגיסטיקה' },
-  { href: '/personnel', icon: <Users size={18} />, label: 'לוחמים' },
   { href: '/media', icon: <ImageIcon size={18} />, label: 'מדיה' },
   { href: '/staff/messages', icon: <Bell size={18} />, label: 'לוח מודעות' },
 ];
@@ -23,8 +23,8 @@ export default function Sidebar() {
     { href: '/', icon: '🏠', label: 'ראשי' },
     { href: '/schedule', icon: '📅', label: 'לו"ז' },
     { href: '/staff', icon: '👁️', label: 'סגל' },
+    { href: '/staff/requests', icon: '📩', label: 'פניות' },
     { href: '/guard-duty', icon: '🛡️', label: 'שמירות' },
-    { href: '/personnel', icon: '👥', label: 'לוחמים' },
     { href: '/staff/messages', icon: '📢', label: 'לוח' },
   ];
 
