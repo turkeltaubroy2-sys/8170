@@ -43,13 +43,28 @@ export default function GuardDutyPage() {
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
 
   const fetchData = useCallback(async () => {
-    const [evs, sols] = await Promise.all([
-      supabase.from('guard_events').select('*, guard_shifts(*, soldiers(full_name), requested_by:requested_by_id(full_name))').order('created_at', { ascending: false }),
-      supabase.from('soldiers').select('*, soldier_portals(status)').order('full_name')
-    ]);
-    if (evs.data) setEvents(evs.data);
-    if (sols.data) setAllSoldiers(sols.data as any);
-    setLoading(false);
+    try {
+      const [evs, sols] = await Promise.all([
+        supabase.from('guard_events').select('*, guard_shifts(*, soldiers(full_name), requested_by:requested_by_id(full_name))').order('created_at', { ascending: false }),
+        supabase.from('soldiers').select('*, soldier_portals(status)').order('full_name')
+      ]);
+      
+      if (evs.error) {
+        console.error('Error fetching events:', evs.error);
+        // Try a simpler fetch if the complex join fails
+        const simpleEvs = await supabase.from('guard_events').select('*, guard_shifts(*)').order('created_at', { ascending: false });
+        if (simpleEvs.data) setEvents(simpleEvs.data as any);
+      } else if (evs.data) {
+        setEvents(evs.data);
+      }
+      
+      if (sols.error) console.error('Error fetching soldiers:', sols.error);
+      if (sols.data) setAllSoldiers(sols.data as any);
+    } catch (err) {
+      console.error('FetchData exception:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -239,46 +254,63 @@ export default function GuardDutyPage() {
 
         {showModal && (
           <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
-            <Card className="modal" style={{ maxWidth: 500, width: '90%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>יצירת רשימת שמירה חדשה</h3>
-                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+            <Card className="modal" style={{ maxWidth: 550, width: '95%', padding: 0, overflow: 'hidden', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+              <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '24px 30px', color: 'var(--accent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Shield size={24} /> פקודת שמירה חדשה
+                  </h3>
+                  <p style={{ margin: '4px 0 0', opacity: 0.8, fontSize: '0.9rem', color: 'white' }}>הגדרת מיקום, זמנים וחלוקת משמרות</p>
+                </div>
+                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', width: 36, height: 36, borderRadius: '50%', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: 6, fontSize: '0.9rem', fontWeight: 600 }}>מיקום / שם עמדה</label>
-                  <input className="form-input" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="למשל: ד.ג מזרחי" />
+              <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div className="form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
+                    <MapPin size={18} className="text-muted" /> מיקום / שם עמדה
+                  </label>
+                  <input 
+                    className="form-input" 
+                    value={form.location} 
+                    onChange={e => setForm(f => ({ ...f, location: e.target.value }))} 
+                    placeholder='למשל: ד.ג מזרחי, ש"ג ראשי...' 
+                    style={{ fontSize: '1.1rem', padding: '12px 16px' }}
+                  />
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: '0.9rem', fontWeight: 600 }}>שעת התחלה</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
+                      <Clock size={18} className="text-muted" /> שעת התחלה
+                    </label>
                     <input type="datetime-local" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: '0.9rem', fontWeight: 600 }}>שעת סיום</label>
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
+                      <Clock size={18} className="text-muted" /> שעת סיום
+                    </label>
                     <input type="datetime-local" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: '0.9rem', fontWeight: 600 }}>משך שמירה (דק')</label>
-                    <Select 
-                      value={form.shift_duration.toString()} 
-                      onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) }))}
-                      options={[
-                        { value: '30', label: "30 דק'" },
-                        { value: '60', label: "שעה" },
-                        { value: '120', label: "שעתיים" },
-                        { value: '180', label: "3 שעות" },
-                        { value: '240', label: "4 שעות" },
-                      ]}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
+                      <Clock size={18} className="text-muted" /> משך משמרת (בדקות)
+                    </label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      value={form.shift_duration} 
+                      onChange={e => setForm(f => ({ ...f, shift_duration: parseInt(e.target.value) || 0 }))}
+                      min="1"
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: '0.9rem', fontWeight: 600 }}>יעד הרשימה</label>
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.95rem', fontWeight: 700 }}>
+                      <Users size={18} className="text-muted" /> יעד הרשימה
+                    </label>
                     <Select 
                       value={form.target_status} 
                       onChange={e => setForm(f => ({ ...f, target_status: e.target.value }))}
@@ -287,20 +319,38 @@ export default function GuardDutyPage() {
                         { value: 'בפנים', label: '🔥 בפנים' },
                         { value: 'עורף', label: '🛡️ עורף' },
                       ]}
+                      style={{ height: '45px' }}
                     />
                   </div>
                 </div>
 
-                <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-card)', borderRadius: 8, display: 'flex', gap: 10 }}>
-                  <AlertTriangle size={20} style={{ color: 'var(--accent)', flexShrink: 0 }} />
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                    רק חיילים בסטטוס התואם ליעד הרשימה יוכלו לראות אותה בפורטל ולבקש שיבוץ. הסטטוס נקבע לפי מה שהחייל עדכן לאחרונה.
-                  </p>
+                {/* Summary Box */}
+                <div style={{ background: 'var(--bg-card)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>סך הכל משמרות שייווצרו:</span>
+                    <Badge style={{ background: 'var(--primary)', color: 'white', fontSize: '1rem', padding: '4px 12px' }}>
+                      {(() => {
+                        if (!form.start_time || !form.end_time || !form.shift_duration) return 0;
+                        const s = new Date(form.start_time).getTime();
+                        const e = new Date(form.end_time).getTime();
+                        if (e <= s || form.shift_duration <= 0) return 0;
+                        return Math.ceil((e - s) / (form.shift_duration * 60000));
+                      })()}
+                    </Badge>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <AlertTriangle size={18} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }} />
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: 0 }}>
+                      שיבוץ המשמרות יבוצע באופן אוטומטי על פי האינטרוולים שקבעת. חיילים שמתאימים לסטטוס היעד יוכלו לבקש שיבוץ מהפורטל.
+                    </p>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 12 }}>
-                  <Button variant="secondary" onClick={() => setShowModal(false)}>ביטול</Button>
-                  <Button onClick={publishEvent} disabled={saving}>{saving ? 'יוצר רשימה...' : 'צור רשימה'}</Button>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 10 }}>
+                  <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '12px 24px' }}>ביטול</Button>
+                  <Button onClick={publishEvent} disabled={saving} style={{ padding: '12px 32px' }}>
+                    {saving ? 'מייצר רשימה...' : 'צור ושחרר לשיבוץ 🚀'}
+                  </Button>
                 </div>
               </div>
             </Card>
