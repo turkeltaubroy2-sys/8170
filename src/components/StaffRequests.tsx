@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { SoldierRequest } from '@/lib/supabase';
-import { Search, Filter, Calendar, Users, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, Calendar, Users, CheckCircle, Clock, AlertCircle, Trash2, Shield, MoreVertical } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -26,7 +26,13 @@ export default function StaffRequests() {
       .select('*, soldiers(full_name, phone, departments(name, icon))')
       .order('created_at', { ascending: false });
     
-    setRequests(data || []);
+    // Normalize status 'pending' to 'פתוח' for local consistency
+    const normalized = (data || []).map(r => ({
+      ...r,
+      status: r.status === 'pending' ? 'פתוח' : r.status
+    }));
+    
+    setRequests(normalized);
     setLoading(false);
   }, []);
 
@@ -38,6 +44,17 @@ export default function StaffRequests() {
     const { error } = await supabase.from('requests').update({ status }).eq('id', id);
     if (!error) {
       setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    }
+  };
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק פנייה זו? פעולה זו אינה ניתנת לביטול.')) return;
+    
+    const { error } = await supabase.from('requests').delete().eq('id', id);
+    if (!error) {
+      setRequests(prev => prev.filter(r => r.id !== id));
+    } else {
+      alert('שגיאה במחיקת הפנייה: ' + error.message);
     }
   };
 
@@ -193,16 +210,21 @@ export default function StaffRequests() {
                           }}>{r.status}</Badge>
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                          <Select 
-                            style={{ width: 100, marginBottom: 0, fontSize: '0.8rem' }}
-                            value={r.status}
-                            onChange={(e) => updateStatus(r.id, e.target.value)}
-                            options={[
-                              { value: 'פתוח', label: 'פתוח' },
-                              { value: 'בטיפול', label: 'בטיפול' },
-                              { value: 'סגור', label: 'סגור' }
-                            ]}
-                          />
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                            <Select 
+                              style={{ width: 100, marginBottom: 0, fontSize: '0.8rem' }}
+                              value={r.status}
+                              onChange={(e) => updateStatus(r.id, e.target.value)}
+                              options={[
+                                { value: 'פתוח', label: 'פתוח' },
+                                { value: 'בטיפול', label: 'בטיפול' },
+                                { value: 'סגור', label: 'סגור' }
+                              ]}
+                            />
+                            <Button variant="danger" size="sm" onClick={() => deleteRequest(r.id)} title="מחיקת פנייה">
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -223,10 +245,15 @@ export default function StaffRequests() {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{r.soldiers?.departments?.icon} {r.soldiers?.departments?.name} • {formatTime(r.created_at)}</div>
                       </div>
                     </div>
-                    <Badge style={{ 
-                      background: r.status === 'פתוח' ? '#e74c3c22' : r.status === 'בטיפול' ? '#f39c1222' : '#27ae6022',
-                      color: r.status === 'פתוח' ? '#e74c3c' : r.status === 'בטיפול' ? '#f39c12' : '#27ae60'
-                    }}>{r.status}</Badge>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <Badge style={{ 
+                        background: r.status === 'פתוח' ? '#e74c3c22' : r.status === 'בטיפול' ? '#f39c1222' : '#27ae6022',
+                        color: r.status === 'פתוח' ? '#e74c3c' : r.status === 'בטיפול' ? '#f39c12' : '#27ae60'
+                      }}>{r.status}</Badge>
+                      <Button variant="danger" size="sm" style={{ padding: 6, minWidth: 'auto' }} onClick={() => deleteRequest(r.id)}>
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
                   </div>
                   
                   <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8 }}>
@@ -264,9 +291,6 @@ export default function StaffRequests() {
                         { value: 'סגור', label: 'שנה סטטוס: סגור' }
                       ]}
                     />
-                    <Button variant="secondary" size="sm" onClick={() => window.open(`tel:${r.soldiers?.phone}`, '_blank')} disabled={!r.soldiers?.phone}>
-                      📞 התקשר
-                    </Button>
                   </div>
                 </Card>
               ))}

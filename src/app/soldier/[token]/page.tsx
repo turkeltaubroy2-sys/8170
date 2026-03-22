@@ -590,7 +590,7 @@ export default function SoldierPortalPage() {
                           soldier_id: soldier.id,
                           title: 'בקשות יציאה סבב לבנון',
                           type: 'rotation',
-                          status: 'pending',
+                          status: 'פתוח',
                           description: `תאריכים: ${sortedDates}\n\nסיבה: ${rotationNote}`
                         });
 
