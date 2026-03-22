@@ -231,7 +231,7 @@ export default function SoldierPortalPage() {
                 />
                 <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   <Camera size={16} />
-                  <input type="file" accept="image/*" capture="user" hidden onChange={handlePhotoUpload} disabled={saving} />
+                  <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} disabled={saving} />
                 </label>
               </div>
             ) : (
@@ -239,7 +239,7 @@ export default function SoldierPortalPage() {
                 {soldier?.full_name.charAt(0)}
                 <label style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--accent)', color: 'black', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '3px solid var(--bg)', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   <Camera size={16} />
-                  <input type="file" accept="image/*" capture="user" hidden onChange={handlePhotoUpload} disabled={saving} />
+                  <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} disabled={saving} />
                 </label>
               </div>
             )}
