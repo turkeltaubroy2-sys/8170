@@ -3,11 +3,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
-import { Download, RefreshCcw, LayoutDashboard, Send, FileText, AlertTriangle, Search } from 'lucide-react';
+import { Download, RefreshCcw, LayoutDashboard, Send, FileText, AlertTriangle, Search, Database } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import StaffRequests from '@/components/StaffRequests';
-import StaffForms from '@/components/StaffForms';
+import StaffDatabases from '@/components/StaffDatabases';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
@@ -86,9 +86,19 @@ export default function StaffPage() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'table' | 'cards'>('cards');
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'databases'>('overview');
   const [selectedSoldier, setSelectedSoldier] = useState<SoldierWithPortal | null>(null);
   const [showEquipModal, setShowEquipModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newSoldier, setNewSoldier] = useState({
+    full_name: '',
+    username: '',
+    personal_number: '',
+    rank: 'סמל',
+    role: 'לוחם',
+    department_id: '',
+    password: ''
+  });
 
   const updateStatus = async (soldierId: string, newStatus: string) => {
     // Check if portal exists, if not create one or handle accordingly
@@ -211,6 +221,12 @@ export default function StaffPage() {
                   <Download size={14} /> ייצוא לאקסל
                 </Button>
               )}
+              <Button variant="primary" size="sm" onClick={() => {
+                setNewSoldier(prev => ({ ...prev, password: Math.random().toString(36).slice(-8) }));
+                setShowAddModal(true);
+              }}>
+                ➕ הוסף חייל
+              </Button>
               <Button variant="secondary" size="sm" onClick={fetchAll} disabled={refreshing}>
                 <RefreshCcw size={14} className={refreshing ? "spinner" : ""} /> {refreshing ? 'מרענן' : 'רענן'}
               </Button>
@@ -222,7 +238,7 @@ export default function StaffPage() {
           {[
             { tag: 'overview', icon: <LayoutDashboard size={16} />, label: 'מצב כוחות' },
             { tag: 'requests', icon: <Send size={16} />, label: 'פניות חיילים' },
-            { tag: 'forms', icon: <FileText size={16} />, label: 'דוח 1 ושאלונים' },
+            { tag: 'databases', icon: <Database size={16} />, label: 'מאגרי מידע' },
           ].map(tab => (
             <button key={tab.tag}
               style={{ 
@@ -230,7 +246,7 @@ export default function StaffPage() {
                 fontWeight: activeTab === tab.tag ? 600 : 400, color: activeTab === tab.tag ? 'var(--primary)' : 'var(--text)', 
                 borderBottom: activeTab === tab.tag ? '3px solid var(--primary)' : '3px solid transparent' 
               }}
-              onClick={() => setActiveTab(tab.tag as 'overview' | 'requests' | 'forms')}
+              onClick={() => setActiveTab(tab.tag as 'overview' | 'requests' | 'databases')}
             >
               {tab.icon} {tab.label}
             </button>
@@ -245,7 +261,7 @@ export default function StaffPage() {
 
         <div className="page-body">
           {activeTab === 'requests' && <StaffRequests />}
-          {activeTab === 'forms' && <StaffForms />}
+          {activeTab === 'databases' && <StaffDatabases />}
           
           {activeTab === 'overview' && (
             <>
@@ -543,6 +559,114 @@ export default function StaffPage() {
                     );
                   });
                 })()}
+              </div>
+            </div>
+          </div>
+        )}
+        {showAddModal && (
+          <div style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', 
+            zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 
+          }}>
+            <div className="card" style={{ maxWidth: 450, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: 24 }}>
+              <h3 style={{ marginBottom: 20, textAlign: 'center' }}>👨‍🚀 הוספת חייל חדש למערכת</h3>
+              
+              <div className="form-group">
+                <label>שם מלא</label>
+                <Input 
+                  value={newSoldier.full_name} 
+                  onChange={e => setNewSoldier({...newSoldier, full_name: e.target.value})} 
+                  placeholder="לדוגמה: מתנאל חדד"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>מספר אישי (יומש כ-Username)</label>
+                <Input 
+                  value={newSoldier.username} 
+                  onChange={e => setNewSoldier({...newSoldier, username: e.target.value, personal_number: e.target.value})} 
+                  placeholder="לדוגמה: 8896114"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="form-group">
+                  <label>דרגה</label>
+                  <Select 
+                    value={newSoldier.rank} 
+                    onChange={e => setNewSoldier({...newSoldier, rank: e.target.value})}
+                    options={[
+                      { value: 'טוראי', label: 'טוראי' },
+                      { value: 'רב"ט', label: 'רב"ט' },
+                      { value: 'סמל', label: 'סמל' },
+                      { value: 'סמ"ר', label: 'סמ"ר' },
+                      { value: 'רס"ל', label: 'רס"ל' },
+                      { value: 'רס"ר', label: 'רס"ר' },
+                      { value: 'קצין', label: 'קצין' }
+                    ]}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>מחלקה</label>
+                  <Select 
+                    value={newSoldier.department_id} 
+                    onChange={e => setNewSoldier({...newSoldier, department_id: e.target.value})}
+                    options={[
+                      { value: '', label: 'בחר מחלקה' },
+                      ...departments.map(d => ({ value: d.id, label: d.name }))
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>תפקיד</label>
+                <Input 
+                  value={newSoldier.role} 
+                  onChange={e => setNewSoldier({...newSoldier, role: e.target.value})} 
+                  placeholder="לדוגמה: נגביסט"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>סיסמה ראשונית</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Input 
+                    value={newSoldier.password} 
+                    onChange={e => setNewSoldier({...newSoldier, password: e.target.value})} 
+                  />
+                  <Button variant="secondary" onClick={() => setNewSoldier({...newSoldier, password: Math.random().toString(36).slice(-8)})}>🎲</Button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+                <Button variant="primary" style={{ flex: 1 }} onClick={async () => {
+                  if (!newSoldier.full_name || !newSoldier.username || !newSoldier.department_id || !newSoldier.password) {
+                    alert('נא למלא את כל שדות החובה');
+                    return;
+                  }
+                  
+                  const { error } = await supabase.from('soldiers').insert([{
+                    full_name: newSoldier.full_name,
+                    username: newSoldier.username,
+                    personal_number: newSoldier.username,
+                    rank: newSoldier.rank,
+                    role: newSoldier.role,
+                    department_id: newSoldier.department_id,
+                    password: newSoldier.password,
+                    unique_token: self.crypto.randomUUID()
+                  }]);
+
+                  if (error) {
+                    alert('שגיאה בהוספת החייל: ' + error.message);
+                  } else {
+                    alert('החייל נוסף בהצלחה!');
+                    setShowAddModal(false);
+                    setNewSoldier({ full_name: '', username: '', personal_number: '', rank: 'סמל', role: 'לוחם', department_id: '', password: '' });
+                    fetchAll();
+                  }
+                }}>שמור חייל</Button>
+                <Button variant="secondary" style={{ flex: 1 }} onClick={() => setShowAddModal(false)}>ביטול</Button>
               </div>
             </div>
           </div>
