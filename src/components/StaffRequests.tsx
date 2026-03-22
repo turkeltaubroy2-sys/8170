@@ -29,8 +29,8 @@ export default function StaffRequests() {
     // Normalize status 'pending' to 'פתוח' and 'rotation' to 'סבבי יציאות'
     const normalized = (data || []).map(r => ({
       ...r,
-      status: r.status === 'pending' ? 'פתוח' : r.status,
-      type: r.type === 'rotation' ? 'סבבי יציאות' : r.type
+      status: r.status?.toLowerCase() === 'pending' ? 'פתוח' : (r.status || 'פתוח'),
+      type: (r.type?.toLowerCase() === 'rotation' || r.type === 'ROTATIN') ? 'סבבי יציאות' : (r.type || 'כללי')
     }));
     
     setRequests(normalized);

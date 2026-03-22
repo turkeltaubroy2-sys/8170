@@ -8,6 +8,7 @@ import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierDatabases from '@/components/SoldierDatabases';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Database } from 'lucide-react';
 
 const STATUSES = ['בבית', 'עורף', 'בפנים'];
@@ -350,60 +351,98 @@ export default function SoldierPortalPage() {
               </div>
             ) : guardEvents.map(ev => {
               const shifts = [...(ev.guard_shifts || [])].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+              const isCommitted = shifts.some(s => s.soldier_id === soldier?.id || s.requested_by_id === soldier?.id);
+              const isListFull = shifts.every(s => s.soldier_id);
 
               return (
-                <div key={ev.id} className="card">
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 6 }}>📍 {ev.location}</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                    מ- {new Date(ev.start_time).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })} {new Date(ev.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {shifts.map(shift => {
-                      const isMe = shift.soldier_id === soldier?.id;
-                      const isTaken = !!shift.soldier_id && !isMe;
-                      const isOpen = !shift.soldier_id;
-
-                      return (
-                        <div key={shift.id} style={{
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '10px 14px', borderRadius: 8,
-                          background: isMe ? 'rgba(39, 174, 96, 0.1)' : isOpen ? 'var(--bg-surface)' : 'rgba(0,0,0,0.2)',
-                          border: isMe ? '1px solid #27ae60' : '1px solid transparent'
-                        }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: isTaken ? 'var(--text-muted)' : 'var(--text)' }}>
-                            {new Date(shift.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {new Date(shift.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-
-                          {isMe ? (
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#27ae60' }}>🛡️ שובצת למשמרת</span>
-                          ) : shift.requested_by_id === soldier?.id ? (
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f39c12' }}>⏳ בקשתך ממתינה</span>
-                          ) : isTaken || shift.requested_by_id ? (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>נתפס / ממתין לאישור</span>
-                          ) : (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              disabled={saving}
-                              onClick={async () => {
-                                if (!confirm('האם אתה בטוח שברצונך לבקש להשתבץ למשמרת זו?')) return;
-                                setSaving(true);
-                                await supabase.from('guard_shifts').update({ requested_by_id: soldier?.id }).eq('id', shift.id);
-
-                                setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
-                                  ...e,
-                                  guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: soldier?.id || null } : s)
-                                } : e));
-                                setSaving(false);
-                              }}
-                            >
-                              בקש שיבוץ
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
+                <div key={ev.id} className="card" style={{ padding: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)' }}>📍 {ev.location}</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        {new Date(ev.start_time).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                    {isListFull && <Badge style={{ background: '#27ae6022', color: '#27ae60' }}>רשימה מלאה</Badge>}
                   </div>
+
+                  {isListFull ? (
+                    <div style={{ background: 'rgba(39, 174, 96, 0.05)', borderRadius: 12, padding: 16, border: '1px dashed rgba(39, 174, 96, 0.3)' }}>
+                      <p style={{ fontSize: '0.9rem', textAlign: 'center', marginBottom: 12, fontWeight: 700, color: '#27ae60' }}>שיבוץ הסתיים - רשימת שומרים:</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+                        {shifts.map(s => (
+                          <div key={s.id} style={{ fontSize: '0.8rem', padding: '6px 10px', background: 'var(--bg-surface)', borderRadius: 6, display: 'flex', justifyContent: 'space-between', border: s.soldier_id === soldier?.id ? '1px solid #27ae60' : 'none' }}>
+                            <span>{new Date(s.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span style={{ fontWeight: 600 }}>{(s as any).soldiers?.full_name || 'שומר'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {shifts.map(shift => {
+                        const isMe = shift.soldier_id === soldier?.id;
+                        const isRequestedByMe = shift.requested_by_id === soldier?.id;
+                        const isTaken = (!!shift.soldier_id && !isMe) || (!!shift.requested_by_id && !isRequestedByMe);
+
+                        return (
+                          <div key={shift.id} style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '12px 16px', borderRadius: 10,
+                            background: isMe ? 'rgba(39, 174, 96, 0.1)' : isRequestedByMe ? 'rgba(243, 156, 18, 0.1)' : isTaken ? 'rgba(0,0,0,0.1)' : 'var(--bg-surface)',
+                            border: isMe ? '1px solid #27ae60' : isRequestedByMe ? '1px solid #f39c12' : '1px solid transparent'
+                          }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: isTaken ? 'var(--text-muted)' : 'var(--text)' }}>
+                              {new Date(shift.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {new Date(shift.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+
+                            {isMe ? (
+                              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#27ae60' }}>🛡️ שובצת</span>
+                            ) : isRequestedByMe ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f39c12' }}>⏳ בהמתנה</span>
+                                <button 
+                                  className="btn btn-secondary btn-sm" 
+                                  style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#e74c3c' }}
+                                  onClick={async () => {
+                                    if (!confirm('האם לבטל את בקשת השיבוץ?')) return;
+                                    setSaving(true);
+                                    await supabase.from('guard_shifts').update({ requested_by_id: null }).eq('id', shift.id);
+                                    setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
+                                      ...e,
+                                      guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: null } : s)
+                                    } : e));
+                                    setSaving(false);
+                                  }}
+                                >בטל</button>
+                              </div>
+                            ) : isTaken ? (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>נתפס</span>
+                            ) : (
+                              <button
+                                className="btn btn-primary btn-sm"
+                                disabled={saving || isCommitted}
+                                title={isCommitted ? 'כבר בחרת משמרת ברשימה זו' : ''}
+                                onClick={async () => {
+                                  if (!confirm('האם לבקש להשתבץ למשמרת זו?')) return;
+                                  setSaving(true);
+                                  await supabase.from('guard_shifts').update({ requested_by_id: soldier?.id }).eq('id', shift.id);
+
+                                  setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
+                                    ...e,
+                                    guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: soldier?.id || null } : s)
+                                  } : e));
+                                  setSaving(false);
+                                }}
+                              >
+                                בקש שיבוץ
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}

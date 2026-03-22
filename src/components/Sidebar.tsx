@@ -67,20 +67,30 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="bottom-nav">
-        {mobileNavItems.map(item => (
+      <nav className="bottom-nav" style={{ 
+        display: 'flex', 
+        justifyContent: 'space-around', 
+        alignItems: 'center', 
+        padding: '8px 4px',
+        gap: 2
+      }}>
+        {mobileNavItems.slice(0, 5).map(item => (
           <Link 
             key={item.href} 
             href={item.href} 
             className={`bottom-nav-item ${pathname === item.href ? 'active' : ''}`}
+            style={{ flex: 1, minWidth: 0, padding: '4px' }}
           >
-            <span className="nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
+            <span className="nav-icon" style={{ fontSize: '1.2rem' }}>{item.icon}</span>
+            <span style={{ fontSize: '0.65rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
           </Link>
         ))}
-        <button onClick={handleLogout} className="bottom-nav-item" style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}>
-          <span className="nav-icon">🚪</span>
-          <span>יציאה</span>
+        <button onClick={handleLogout} className="bottom-nav-item" style={{ 
+          background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer',
+          flex: 1, minWidth: 0, padding: '4px'
+        }}>
+          <span className="nav-icon" style={{ fontSize: '1.2rem' }}>🚪</span>
+          <span style={{ fontSize: '0.65rem' }}>יציאה</span>
         </button>
       </nav>
     </>
