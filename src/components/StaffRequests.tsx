@@ -62,7 +62,9 @@ export default function StaffRequests() {
   const downloadRefill = (r: SoldierRequest & { soldiers?: any }) => {
     const content = `סיכום מלא מחדש\n------------------\nתאריך: ${formatTime(r.created_at)}\nחייל: ${r.soldiers?.full_name}\nמחלקה: ${r.soldiers?.departments?.name}\n\nפירוט פריטים:\n${r.description}\n\n------------------\nהופק ע"י מערכת פלוגה ב'`;
     
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    // Add UTF-8 BOM for Windows compatibility (prevents gibberish in Notepad)
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
