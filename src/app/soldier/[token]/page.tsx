@@ -381,7 +381,7 @@ export default function SoldierPortalPage() {
           <div className="alert alert-success">✅ הנתונים נשמרו בהצלחה!</div>
         )}
 
-        {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} />}
+        {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} soldierRole={soldier.role} soldierName={soldier.full_name} />}
         {activeTab === 'databases' && soldier && <SoldierDatabases />}
 
         {activeTab === 'messages' && (

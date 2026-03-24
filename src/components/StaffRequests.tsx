@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { SoldierRequest } from '@/lib/supabase';
-import { Search, Filter, Calendar, Users, CheckCircle, Clock, AlertCircle, Trash2, Shield, MoreVertical } from 'lucide-react';
+import { Search, Filter, Users, CheckCircle, Clock, Trash2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -121,7 +121,7 @@ export default function StaffRequests() {
           <div style={{ color: 'var(--success)' }}><CheckCircle size={24} /></div>
           <div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{stats.total}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>סה"כ בסינון</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>סה{"\""}כ בסינון</div>
           </div>
         </Card>
       </div>
@@ -199,10 +199,20 @@ export default function StaffRequests() {
                         </td>
                         <td style={{ padding: '12px 16px', maxWidth: 300 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <Badge variant="gray" style={{ fontSize: '0.65rem' }}>{r.type}</Badge>
+                            <Badge variant={r.type === 'מלא מחדש' ? 'blue' : 'gray'} style={{ fontSize: '0.65rem' }}>
+                              {r.type === 'מלא מחדש' ? '✨ ' + r.type : r.type}
+                            </Badge>
                             <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{r.title}</span>
                           </div>
-                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description}</p>
+                          {r.type === 'מלא מחדש' ? (
+                            <div style={{ fontSize: '0.8rem', background: 'var(--bg)', padding: '4px 8px', borderRadius: 4, borderRight: '2px solid var(--accent)' }}>
+                              {r.description.split('\n').map((line: string, i: number) => (
+                                <div key={i}>{line}</div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description}</p>
+                          )}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
                           <Badge style={{ 
@@ -257,27 +267,37 @@ export default function StaffRequests() {
                     </div>
                   </div>
                   
-                  <div style={{ marginBottom: 12, padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8 }}>
+                  <div style={{ marginBottom: 12, padding: '8px 12px', background: r.type === 'מלא מחדש' ? 'rgba(var(--accent-rgb), 0.05)' : 'var(--bg-surface)', borderRadius: 8, border: r.type === 'מלא מחדש' ? '1px solid rgba(var(--accent-rgb), 0.2)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <Badge variant="gray" style={{ fontSize: '0.6rem', padding: '1px 6px' }}>{r.type}</Badge>
+                      <Badge variant={r.type === 'מלא מחדש' ? 'blue' : 'gray'} style={{ fontSize: '0.6rem', padding: '1px 6px' }}>
+                        {r.type === 'מלא מחדש' ? '✨ ' + r.type : r.type}
+                      </Badge>
                       <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{r.title}</span>
                     </div>
-                    <p style={{ 
-                      fontSize: '0.85rem', color: 'var(--text-muted)', cursor: 'pointer',
-                      display: expandedId === r.id ? 'block' : '-webkit-box',
-                      WebkitLineClamp: expandedId === r.id ? 'unset' : 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }} onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
-                      {r.description}
-                    </p>
-                    {r.description.length > 100 && (
-                      <button 
-                        onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
-                        style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.75rem', cursor: 'pointer', marginTop: 4, padding: 0 }}
-                      >
-                        {expandedId === r.id ? 'הצג פחות' : 'קרא עוד...'}
-                      </button>
+                    {r.type === 'מלא מחדש' ? (
+                      <div style={{ fontSize: '0.85rem', whiteSpace: 'pre-line', lineHeight: 1.4 }}>
+                        {r.description}
+                      </div>
+                    ) : (
+                      <>
+                        <p style={{ 
+                          fontSize: '0.85rem', color: 'var(--text-muted)', cursor: 'pointer',
+                          display: expandedId === r.id ? 'block' : '-webkit-box',
+                          WebkitLineClamp: expandedId === r.id ? 'unset' : 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }} onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}>
+                          {r.description}
+                        </p>
+                        {r.description.length > 100 && (
+                          <button 
+                            onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
+                            style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.75rem', cursor: 'pointer', marginTop: 4, padding: 0 }}
+                          >
+                            {expandedId === r.id ? 'הצג פחות' : 'קרא עוד...'}
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
 

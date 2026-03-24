@@ -5,12 +5,35 @@ import { supabase } from '@/lib/supabase';
 import type { SoldierRequest } from '@/lib/supabase';
 import { Send, FileCheck } from 'lucide-react';
 
-export default function SoldierRequests({ soldierId }: { soldierId: string }) {
+export default function SoldierRequests({ soldierId, soldierRole, soldierName }: { soldierId: string, soldierRole?: string, soldierName?: string }) {
+  const isStaff = (soldierRole && (
+    soldierRole.includes('מפקד') || 
+    soldierRole.includes('סמל') || 
+    soldierRole.includes('רס"פ') || soldierRole.includes('רספ') ||
+    soldierRole.includes('סמ"פ') || soldierRole.includes('סמפ') ||
+    soldierRole.includes('מ"פ') || soldierRole.includes('מפ') ||
+    soldierRole.includes('קצין') ||
+    soldierRole.includes('סגל') ||
+    soldierRole.includes('מ. מחלקה') ||
+    soldierRole.includes('ס. מחלקה')
+  )) || (
+    // Explicit list of staff members provided by user
+    soldierName?.includes('טורקלטאוב') || 
+    soldierName?.includes('רועי') ||
+    soldierName?.includes('איתי אזולאי') ||
+    soldierName?.includes('אזולאי')
+  );
+
   const [requests, setRequests] = useState<SoldierRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [type, setType] = useState('ציוד');
+  
+  // Refill specific state
+  const [item, setItem] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [notes, setNotes] = useState('');
 
   const fetchMyRequests = useCallback(async () => {
     setLoading(true);
@@ -32,10 +55,32 @@ export default function SoldierRequests({ soldierId }: { soldierId: string }) {
 
   const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) return;
-    await supabase.from('requests').insert([{ soldier_id: soldierId, title, description: desc, type }]);
+    
+    let finalTitle = title;
+    let finalDesc = desc;
+    const finalType = type;
+
+    if (type === 'מלא מחדש') {
+      if (!item) return;
+      finalTitle = `מלא מחדש: ${item}`;
+      finalDesc = `פריט: ${item}\nכמות: ${quantity || 'לא צוין'}\nהערות: ${notes || 'אין'}`;
+    } else {
+      if (!title) return;
+    }
+
+    await supabase.from('requests').insert([{ 
+      soldier_id: soldierId, 
+      title: finalTitle, 
+      description: finalDesc, 
+      type: finalType 
+    }]);
+
     setTitle('');
     setDesc('');
+    setItem('');
+    setQuantity('');
+    setNotes('');
+    if (isStaff) setType('ציוד'); // Reset to default
     fetchMyRequests();
   };
 
@@ -52,16 +97,37 @@ export default function SoldierRequests({ soldierId }: { soldierId: string }) {
               <option value="ציוד">ציוד חסר (נעליים, דיסקית...)</option>
               <option value="רפואי">בעיה רפואית</option>
               <option value="כללי">אחר / כללי</option>
+              {isStaff && <option value="מלא מחדש">✨ מלא מחדש (סגל בלבד)</option>}
             </select>
           </div>
-          <div className="form-group">
-            <label>נושא</label>
-            <input className="form-input" required value={title} onChange={e => setTitle(e.target.value)} placeholder="למשל: צריך נעלי שטח מידה 43" />
-          </div>
-          <div className="form-group">
-            <label>פירוט נוסף</label>
-            <textarea className="form-textarea" rows={3} value={desc} onChange={e => setDesc(e.target.value)} placeholder="פירוט הבקשה..." />
-          </div>
+
+          {type === 'מלא מחדש' ? (
+            <>
+              <div className="form-group">
+                <label>פריט</label>
+                <input className="form-input" required value={item} onChange={e => setItem(e.target.value)} placeholder="למשל: מים, מנות קרב, תחמושת..." />
+              </div>
+              <div className="form-group">
+                <label>כמות (אופציונלי)</label>
+                <input className="form-input" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="למשל: 5 ארגזים" />
+              </div>
+              <div className="form-group">
+                <label>הערות</label>
+                <textarea className="form-textarea" rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="דגשים נוספים..." />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="form-group">
+                <label>נושא</label>
+                <input className="form-input" required value={title} onChange={e => setTitle(e.target.value)} placeholder="למשל: צריך נעלי שטח מידה 43" />
+              </div>
+              <div className="form-group">
+                <label>פירוט נוסף</label>
+                <textarea className="form-textarea" rows={3} value={desc} onChange={e => setDesc(e.target.value)} placeholder="פירוט הבקשה..." />
+              </div>
+            </>
+          )}
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>שלח פניה</button>
         </form>
       </div>
