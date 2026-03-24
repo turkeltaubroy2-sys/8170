@@ -31,9 +31,20 @@ export default function SoldierRequests({ soldierId, soldierRole, soldierName }:
   const [type, setType] = useState('ציוד');
   
   // Refill specific state
-  const [item, setItem] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [items, setItems] = useState([{ item: '', quantity: '' }]);
   const [notes, setNotes] = useState('');
+
+  const addItem = () => setItems([...items, { item: '', quantity: '' }]);
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+    }
+  };
+  const updateItem = (index: number, field: 'item' | 'quantity', value: string) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+    setItems(newItems);
+  };
 
   const fetchMyRequests = useCallback(async () => {
     setLoading(true);
@@ -61,9 +72,12 @@ export default function SoldierRequests({ soldierId, soldierRole, soldierName }:
     const finalType = type;
 
     if (type === 'מלא מחדש') {
-      if (!item) return;
-      finalTitle = `מלא מחדש: ${item}`;
-      finalDesc = `פריט: ${item}\nכמות: ${quantity || 'לא צוין'}\nהערות: ${notes || 'אין'}`;
+      const validItems = items.filter(i => i.item.trim() !== '');
+      if (validItems.length === 0) return;
+      
+      finalTitle = `מלא מחדש: ${validItems[0].item}${validItems.length > 1 ? ` (+${validItems.length - 1} נוספים)` : ''}`;
+      finalDesc = validItems.map(i => `• ${i.item}: ${i.quantity || 'לא צוין'}`).join('\n');
+      if (notes) finalDesc += `\n\nהערות: ${notes}`;
     } else {
       if (!title) return;
     }
@@ -77,8 +91,7 @@ export default function SoldierRequests({ soldierId, soldierRole, soldierName }:
 
     setTitle('');
     setDesc('');
-    setItem('');
-    setQuantity('');
+    setItems([{ item: '', quantity: '' }]);
     setNotes('');
     if (isStaff) setType('ציוד'); // Reset to default
     fetchMyRequests();
@@ -103,16 +116,52 @@ export default function SoldierRequests({ soldierId, soldierRole, soldierName }:
 
           {type === 'מלא מחדש' ? (
             <>
-              <div className="form-group">
-                <label>פריט</label>
-                <input className="form-input" required value={item} onChange={e => setItem(e.target.value)} placeholder="למשל: מים, מנות קרב, תחמושת..." />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+                {items.map((it, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: 8, alignItems: 'end', background: 'var(--bg)', padding: 8, borderRadius: 8 }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.7rem' }}>פריט</label>
+                      <input 
+                        className="form-input" 
+                        required={idx === 0} 
+                        value={it.item} 
+                        onChange={e => updateItem(idx, 'item', e.target.value)} 
+                        placeholder="למשל: מים" 
+                        style={{ padding: '6px 8px' }}
+                      />
+                    </div>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.7rem' }}>כמות</label>
+                      <input 
+                        className="form-input" 
+                        value={it.quantity} 
+                        onChange={e => updateItem(idx, 'quantity', e.target.value)} 
+                        placeholder="למשל: 5" 
+                        style={{ padding: '6px 8px' }}
+                      />
+                    </div>
+                    {items.length > 1 && (
+                      <button 
+                        type="button" 
+                        onClick={() => removeItem(idx)}
+                        style={{ padding: '8px', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={addItem}
+                  style={{ fontSize: '0.8rem', padding: '6px', width: 'fit-content' }}
+                >
+                  ➕ הוסף שורה
+                </button>
               </div>
               <div className="form-group">
-                <label>כמות (אופציונלי)</label>
-                <input className="form-input" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="למשל: 5 ארגזים" />
-              </div>
-              <div className="form-group">
-                <label>הערות</label>
+                <label>הערות נוספות</label>
                 <textarea className="form-textarea" rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="דגשים נוספים..." />
               </div>
             </>
