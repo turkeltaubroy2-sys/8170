@@ -37,7 +37,7 @@ export default function GuardDutyPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
-    location: '', start_time: '', end_time: '', shift_duration: 120, target_status: 'all'
+    location: '', start_time: '', end_time: '', shift_duration: 120, target_status: 'all', positions_per_shift: 1
   });
   const [saving, setSaving] = useState(false);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
@@ -104,12 +104,15 @@ export default function GuardDutyPage() {
         let next = current + durMs;
         if (next > endMs) next = endMs;
         
-        shifts.push({
-          guard_event_id: eventData.id,
-          start_time: new Date(current).toISOString(),
-          end_time: new Date(next).toISOString(),
-          soldier_id: null
-        });
+        // Create multiple slots for the same interval
+        for (let i = 0; i < form.positions_per_shift; i++) {
+          shifts.push({
+            guard_event_id: eventData.id,
+            start_time: new Date(current).toISOString(),
+            end_time: new Date(next).toISOString(),
+            soldier_id: null
+          });
+        }
         current = next;
       }
       
@@ -120,7 +123,7 @@ export default function GuardDutyPage() {
     
     setSaving(false);
     setShowModal(false);
-    setForm({ location: '', start_time: '', end_time: '', shift_duration: 120, target_status: 'all' });
+    setForm({ location: '', start_time: '', end_time: '', shift_duration: 120, target_status: 'all', positions_per_shift: 1 });
     fetchData();
   };
 
@@ -360,18 +363,21 @@ export default function GuardDutyPage() {
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>
-                      <Users size={16} /> יעד
+                      <Users size={16} /> שלישייה/צמד (עמדות)
                     </label>
-                    <Select 
-                      value={form.target_status} 
-                      onChange={e => setForm(f => ({ ...f, target_status: e.target.value }))}
-                      options={[
-                        { value: 'all', label: '🌍 כולם' },
-                        { value: 'בפנים', label: '🔥 בפנים' },
-                        { value: 'עורף', label: '🛡️ עורף' },
-                      ]}
-                      style={{ height: '48px', fontSize: '16px', fontWeight: 700, borderRadius: 10 }}
-                    />
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={form.positions_per_shift} 
+                        onChange={e => setForm(f => ({ ...f, positions_per_shift: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 800, padding: '8px', borderRadius: 10, width: '70px' }}
+                      />
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => setForm(f => ({ ...f, positions_per_shift: Math.max(1, (f.positions_per_shift || 1) + 1) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 800 }}>+1</button>
+                        <button onClick={() => setForm(f => ({ ...f, positions_per_shift: Math.max(1, (f.positions_per_shift || 1) - 1) }))} style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 800 }}>-1</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -385,7 +391,8 @@ export default function GuardDutyPage() {
                         const s = new Date(form.start_time).getTime();
                         const e = new Date(form.end_time).getTime();
                         if (e <= s || form.shift_duration <= 0) return 0;
-                        return Math.ceil((e - s) / (form.shift_duration * 60000));
+                        const intervals = Math.ceil((e - s) / (form.shift_duration * 60000));
+                        return intervals * (form.positions_per_shift || 1);
                       })()}
                     </div>
                   </div>
