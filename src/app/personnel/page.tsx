@@ -152,7 +152,6 @@ export default function PersonnelPage() {
               {grouped.map(({ dep, soldiers: depSoldiers }) => depSoldiers.length > 0 && (
                 <div key={dep.id} style={{ marginBottom: 32 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '1.4rem' }}>{dep.icon}</span>
                     <h3 style={{ fontWeight: 800, fontSize: '1.1rem' }}>{dep.name}</h3>
                     <span className="badge badge-gray">{depSoldiers.length} חיילים</span>
                   </div>
@@ -288,7 +287,7 @@ export default function PersonnelPage() {
                 <label className="form-label">מחלקה</label>
                 <select className="form-select" value={form.department_id} onChange={e => setForm(f => ({ ...f, department_id: e.target.value }))}>
                   <option value="">ללא מחלקה</option>
-                  {departments.map(d => <option key={d.id} value={d.id}>{d.icon} {d.name}</option>)}
+                  {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
               <div className="form-group">

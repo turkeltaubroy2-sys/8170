@@ -372,7 +372,7 @@ export default function StaffPage() {
                             </div>
                           </td>
                           <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                            {s.departments ? `${s.departments.icon} ${s.departments.name}` : '—'}
+                            {s.departments ? s.departments.name : '—'}
                           </td>
                           <td>
                             <Select 

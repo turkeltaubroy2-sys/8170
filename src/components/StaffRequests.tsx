@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { SoldierRequest } from '@/lib/supabase';
-import { Search, Filter, Users, CheckCircle, Clock, Trash2, AlertCircle } from 'lucide-react';
+import { Search, Filter, Users, CheckCircle, Clock, Trash2, AlertCircle, Download } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -57,6 +57,20 @@ export default function StaffRequests() {
     } else {
       alert('שגיאה במחיקת הפנייה: ' + error.message);
     }
+  };
+
+  const downloadRefill = (r: SoldierRequest & { soldiers?: any }) => {
+    const content = `סיכום מלא מחדש\n------------------\nתאריך: ${formatTime(r.created_at)}\nחייל: ${r.soldiers?.full_name}\nמחלקה: ${r.soldiers?.departments?.name}\n\nפירוט פריטים:\n${r.description}\n\n------------------\nהופק ע"י מערכת פלוגה ב'`;
+    
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `מלא_מחדש_${r.soldiers?.full_name}_${new Date(r.created_at).getTime()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const filteredRequests = useMemo(() => {
@@ -195,7 +209,7 @@ export default function StaffRequests() {
                         <td style={{ padding: '12px 16px', fontSize: '0.85rem', color: 'var(--text-dim)' }}>{formatTime(r.created_at)}</td>
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ fontWeight: 700 }}>{r.soldiers?.full_name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.soldiers?.departments?.icon} {r.soldiers?.departments?.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.soldiers?.departments?.name}</div>
                         </td>
                         <td style={{ padding: '12px 16px', maxWidth: 300 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -232,6 +246,11 @@ export default function StaffRequests() {
                                 { value: 'סגור', label: 'סגור' }
                               ]}
                             />
+                             {r.type === 'מלא מחדש' && (
+                              <Button variant="secondary" size="sm" onClick={() => downloadRefill(r)} title="הורדה לקובץ">
+                                <Download size={14} />
+                              </Button>
+                            )}
                             <Button variant="danger" size="sm" onClick={() => deleteRequest(r.id)} title="מחיקת פנייה">
                               <Trash2 size={14} />
                             </Button>
@@ -253,7 +272,7 @@ export default function StaffRequests() {
                       <div className="avatar-placeholder" style={{ width: 32, height: 32, fontSize: '0.8rem' }}>{r.soldiers?.full_name.charAt(0)}</div>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{r.soldiers?.full_name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{r.soldiers?.departments?.icon} {r.soldiers?.departments?.name} • {formatTime(r.created_at)}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{r.soldiers?.departments?.name} • {formatTime(r.created_at)}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -261,6 +280,11 @@ export default function StaffRequests() {
                         background: r.status === 'פתוח' ? '#e74c3c22' : r.status === 'בטיפול' ? '#f39c1222' : '#27ae6022',
                         color: r.status === 'פתוח' ? '#e74c3c' : r.status === 'בטיפול' ? '#f39c12' : '#27ae60'
                       }}>{r.status}</Badge>
+                      {r.type === 'מלא מחדש' && (
+                        <Button variant="secondary" size="sm" style={{ padding: 6, minWidth: 'auto' }} onClick={() => downloadRefill(r)}>
+                          <Download size={14} />
+                        </Button>
+                      )}
                       <Button variant="danger" size="sm" style={{ padding: 6, minWidth: 'auto' }} onClick={() => deleteRequest(r.id)}>
                         <Trash2 size={14} />
                       </Button>
