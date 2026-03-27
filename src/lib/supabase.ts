@@ -144,6 +144,7 @@ export type Message = {
   title: string;
   content: string;
   target_department_id: string | null;
+  target_soldier_id?: string | null;
   created_by: string;
   created_at: string;
   departments?: Pick<Department, 'name'>;

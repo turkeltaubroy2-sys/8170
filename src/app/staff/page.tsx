@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
+import ZodiacWheel from '@/components/ZodiacWheel';
 
 type SoldierWithPortal = {
   id: string;
@@ -87,7 +88,7 @@ export default function StaffPage() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'table' | 'cards'>('cards');
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'requests' | 'forms' | 'zodiac'>('overview');
   const [selectedSoldier, setSelectedSoldier] = useState<SoldierWithPortal | null>(null);
   const [showEquipModal, setShowEquipModal] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
@@ -241,6 +242,7 @@ export default function StaffPage() {
             { tag: 'overview', icon: <LayoutDashboard size={16} />, label: 'מצב כוחות' },
             { tag: 'requests', icon: <Send size={16} />, label: 'פניות חיילים' },
             { tag: 'forms', icon: <FileText size={16} />, label: 'דוח 1 ושאלונים' },
+            { tag: 'zodiac', icon: <span>🎡</span>, label: 'גלגל המזלות' },
           ].map(tab => (
             <button key={tab.tag}
               style={{ 
@@ -248,7 +250,7 @@ export default function StaffPage() {
                 fontWeight: activeTab === tab.tag ? 600 : 400, color: activeTab === tab.tag ? 'var(--primary)' : 'var(--text)', 
                 borderBottom: activeTab === tab.tag ? '3px solid var(--primary)' : '3px solid transparent' 
               }}
-              onClick={() => setActiveTab(tab.tag as 'overview' | 'requests' | 'forms')}
+              onClick={() => setActiveTab(tab.tag as 'overview' | 'requests' | 'forms' | 'zodiac')}
             >
               {tab.icon} {tab.label}
             </button>
@@ -277,6 +279,7 @@ export default function StaffPage() {
         <div className="page-body">
           {activeTab === 'requests' && <StaffRequests />}
           {activeTab === 'forms' && <StaffForms />}
+          {activeTab === 'zodiac' && <ZodiacWheel soldiers={soldiers} />}
           
           {activeTab === 'overview' && (
             <>

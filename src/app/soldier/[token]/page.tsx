@@ -106,10 +106,10 @@ export default function SoldierPortalPage() {
       .order('created_at', { ascending: false });
     if (eventsData) setGuardEvents(eventsData);
 
-    // Fetch messages targeted to all or this soldier's department
+    // Fetch messages targeted to all, this soldier's department, or this specific soldier
     const { data: messagesData } = await supabase.from('messages')
       .select('*')
-      .or(`target_department_id.eq.${soldierData.department_id},target_department_id.is.null`)
+      .or(`target_department_id.eq.${soldierData.department_id},target_department_id.is.null,target_soldier_id.eq.${soldierData.id}`)
       .order('created_at', { ascending: false });
     if (messagesData) setMessages(messagesData);
 
