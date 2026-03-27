@@ -74,30 +74,37 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
     let currentRotation = rotation;
 
     for (let i = 0; i < rounds; i++) {
-      const extraRounds = 3 + Math.random() * 3;
-      const spinAngle = extraRounds * 360 + Math.random() * 360;
-      currentRotation += spinAngle;
-      setRotation(currentRotation);
-
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Calculate winner from currentRotation
-      // The pointer is at 270 degrees (top - 12 o'clock means 270 in canvas standard where 0 is 3 o'clock)
-      // Our canvas pointer is at the top (idx 0 at top usually)
-      const adjustedRotation = (currentRotation % 360 + 360) % 360;
-      const sliceAngle = 360 / selectedSoldiers.length;
-      // Invert for rotation (wheel rotates, pointer is static at top)
-      // Top is actually 270 degrees in canvas coordinates if we start from 0
-      // But we draw from 0. Let's simplify: 
-      // Pick a random soldier that hasn't won yet
+      // Pick winner first
       const available = selectedSoldiers.filter(s => !newWinners.find(nw => nw.id === s.id));
       const winner = available[Math.floor(Math.random() * available.length)];
+      const winnerIndex = selectedSoldiers.findIndex(s => s.id === winner.id);
+      
+      const sliceAngle = 360 / selectedSoldiers.length;
+      // Target angle to put the slice at the top (pointer is at top)
+      // Top is 0 degrees in our logic because we draw from 0.
+      // Wait, canvas draws 0 at 3 o'clock. We rotate the canvas.
+      // If we rotate the canvas by R, then the slice at angle A will be at R+A.
+      // We want R+A to be at the top. Top is 270 degrees (or -90).
+      // So R = 270 - A.
+      // A for winnerIndex is (winnerIndex + 0.5) * sliceAngle.
+      const targetAngle = 270 - (winnerIndex + 0.5) * sliceAngle;
+      
+      const extraRounds = 4 + Math.random() * 2;
+      // Make sure we always rotate FORWARD
+      let finalRotation = currentRotation + (targetAngle - (currentRotation % 360)) + extraRounds * 360;
+      if (finalRotation <= currentRotation) finalRotation += 360;
+      
+      currentRotation = finalRotation;
+      setRotation(currentRotation);
+
+      await new Promise(resolve => setTimeout(resolve, 3100));
+
       newWinners.push(winner);
       setCurrentWinner(winner);
       setShowConfetti(true);
       
       if (i < rounds - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         setShowConfetti(false);
         setCurrentWinner(null);
       }
