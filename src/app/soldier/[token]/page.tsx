@@ -10,6 +10,7 @@ import SoldierDatabases from '@/components/SoldierDatabases';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Database } from 'lucide-react';
+import ZodiacWheel from '@/components/ZodiacWheel';
 
 
 
@@ -65,7 +66,8 @@ export default function SoldierPortalPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'databases' | 'guard' | 'equipment' | 'messages'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'databases' | 'guard' | 'equipment' | 'messages' | 'zodiac'>('status');
+  const [allSoldiers, setAllSoldiers] = useState<{id: string, full_name: string, department_id: string}[]>([]);
   const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [form, setForm] = useState({
@@ -134,6 +136,10 @@ export default function SoldierPortalPage() {
       );
       setGuardEvents(filtered);
     }
+
+    // Fetch all soldiers for the wheel
+    const { data: allS } = await supabase.from('soldiers').select('id, full_name, department_id').order('full_name');
+    if (allS) setAllSoldiers(allS);
 
     setLoading(false);
   }, [token]);
@@ -375,6 +381,13 @@ export default function SoldierPortalPage() {
               </span>
             )}
           </button>
+          <button
+            className={activeTab === 'zodiac' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'zodiac' ? 'var(--accent)' : 'var(--text-muted)' }}
+            onClick={() => setActiveTab('zodiac')}
+          >
+             <span>🎡</span> גלגל המזלות
+          </button>
         </div>
 
         {saved && activeTab === 'status' && (
@@ -383,6 +396,7 @@ export default function SoldierPortalPage() {
 
         {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} soldierRole={soldier.role} soldierName={soldier.full_name} />}
         {activeTab === 'databases' && soldier && <SoldierDatabases />}
+        {activeTab === 'zodiac' && <ZodiacWheel soldiers={allSoldiers} />}
 
         {activeTab === 'messages' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
