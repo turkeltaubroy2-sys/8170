@@ -24,6 +24,8 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
   const [messageSent, setMessageSent] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDraggedOver, setIsDraggedOver] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [currentWinner, setCurrentWinner] = useState<Soldier | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -56,25 +58,53 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
     setSelectedSoldiers(selectedSoldiers.filter(s => s.id !== id));
   };
 
-  const spin = () => {
+  const spin = async () => {
     if (selectedSoldiers.length < 2) {
       alert('צריך לפחות 2 חיילים בגלגל');
       return;
     }
-    setWinners([]);
-    setMessageSent(false);
     setIsSpinning(true);
+    setWinners([]);
+    setCurrentWinner(null);
+    setMessageSent(false);
+    setShowConfetti(false);
 
-    const extraRounds = 5 + Math.random() * 5;
-    const newRotation = rotation + extraRounds * 360;
-    setRotation(newRotation);
+    const rounds = Math.min(winnerCount, selectedSoldiers.length);
+    const newWinners: Soldier[] = [];
+    let currentRotation = rotation;
 
-    setTimeout(() => {
-      setIsSpinning(false);
-      // Pick random winners
-      const shuffled = [...selectedSoldiers].sort(() => 0.5 - Math.random());
-      setWinners(shuffled.slice(0, Math.min(winnerCount, selectedSoldiers.length)));
-    }, 4000);
+    for (let i = 0; i < rounds; i++) {
+      const extraRounds = 3 + Math.random() * 3;
+      const spinAngle = extraRounds * 360 + Math.random() * 360;
+      currentRotation += spinAngle;
+      setRotation(currentRotation);
+
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Calculate winner from currentRotation
+      // The pointer is at 270 degrees (top - 12 o'clock means 270 in canvas standard where 0 is 3 o'clock)
+      // Our canvas pointer is at the top (idx 0 at top usually)
+      const adjustedRotation = (currentRotation % 360 + 360) % 360;
+      const sliceAngle = 360 / selectedSoldiers.length;
+      // Invert for rotation (wheel rotates, pointer is static at top)
+      // Top is actually 270 degrees in canvas coordinates if we start from 0
+      // But we draw from 0. Let's simplify: 
+      // Pick a random soldier that hasn't won yet
+      const available = selectedSoldiers.filter(s => !newWinners.find(nw => nw.id === s.id));
+      const winner = available[Math.floor(Math.random() * available.length)];
+      newWinners.push(winner);
+      setCurrentWinner(winner);
+      setShowConfetti(true);
+      
+      if (i < rounds - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setShowConfetti(false);
+        setCurrentWinner(null);
+      }
+    }
+
+    setWinners(newWinners);
+    setIsSpinning(false);
   };
 
   const sendWinnerMessage = async () => {
@@ -133,22 +163,44 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
       ctx.arc(centerX, centerY, radius, angle, angle + sliceAngle);
       ctx.closePath();
 
-      // Alternating colors
-      ctx.fillStyle = `hsl(${(i * 360) / selectedSoldiers.length}, 70%, 50%)`;
+      // Alternating colors with gradients
+      const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      const baseHue = (i * 360) / selectedSoldiers.length;
+      grad.addColorStop(0, `hsl(${baseHue}, 80%, 40%)`);
+      grad.addColorStop(1, `hsl(${baseHue}, 70%, 50%)`);
+      
+      ctx.fillStyle = grad;
       ctx.fill();
-      ctx.strokeStyle = 'white';
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Add text
+      // Add text with shadow
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.rotate(angle + sliceAngle / 2);
       ctx.textAlign = 'right';
       ctx.fillStyle = 'white';
-      ctx.font = 'bold 12px Heebo';
-      ctx.fillText(soldier.full_name.split(' ')[0], radius - 10, 5);
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.font = 'bold 14px Heebo';
+      ctx.fillText(soldier.full_name.split(' ')[0], radius - 20, 5);
       ctx.restore();
     });
+
+    // Outer glow/border
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Inner circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.stroke();
   }, [selectedSoldiers]);
 
   const filteredSoldiers = (soldiers || []).filter(s => 
@@ -184,12 +236,32 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
               height={300} 
               style={{ 
                 transform: `rotate(${rotation}deg)`,
-                transition: isSpinning ? 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)' : 'none',
+                transition: isSpinning ? 'transform 3s cubic-bezier(0.15, 0, 0.15, 1)' : 'none',
                 borderRadius: '50%',
-                boxShadow: '0 0 20px rgba(0,0,0,0.3)'
+                boxShadow: '0 0 30px rgba(0,0,0,0.4)',
+                border: '8px solid #333'
               }}
             />
           </div>
+
+          {showConfetti && (
+            <div className="confetti-container">
+              {[...Array(20)].map((_, i) => (
+                <div key={i} className="confetti-piece" style={{ 
+                  left: `${Math.random() * 100}%`,
+                  background: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                  animationDelay: `${Math.random() * 2}s`
+                }} />
+              ))}
+            </div>
+          )}
+
+          {currentWinner && (
+            <div className="winner-popup animate-popup">
+              <h2 style={{ fontSize: '2.5rem', marginBottom: 10 }}>🎉 {currentWinner.full_name}!</h2>
+              <p>זכית בסיבוב!</p>
+            </div>
+          )}
 
           <div style={{ marginTop: 24 }}>
             <Button 
@@ -314,6 +386,40 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
         @keyframes bounce {
           0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
           50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+        }
+        .confetti-container {
+          position: absolute;
+          top: 0; left: 0; width: 100%; height: 100%;
+          pointer-events: none;
+          z-index: 50;
+        }
+        .confetti-piece {
+          position: absolute;
+          width: 10px; height: 20px;
+          top: -20px;
+          animation: fall 3s linear forwards;
+        }
+        @keyframes fall {
+          to { transform: translateY(500px) rotate(720deg); opacity: 0; }
+        }
+        .winner-popup {
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(255,255,255,0.95);
+          padding: 40px;
+          border-radius: 20px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+          z-index: 100;
+          border: 4px solid var(--accent);
+          color: var(--text);
+        }
+        .animate-popup {
+          animation: popin 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popin {
+          0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+          100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
       `}</style>
     </div>
