@@ -22,6 +22,8 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
   const [rotation, setRotation] = useState(0);
   const [sending, setSending] = useState(false);
   const [messageSent, setMessageSent] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDraggedOver, setIsDraggedOver] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -29,6 +31,25 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
     if (!selectedSoldiers.find(s => s.id === soldier.id)) {
       setSelectedSoldiers([...selectedSoldiers, soldier]);
     }
+  };
+
+  const onDragStart = (e: React.DragEvent, soldier: Soldier) => {
+    e.dataTransfer.setData('soldier', JSON.stringify(soldier));
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggedOver(false);
+    const soldierData = e.dataTransfer.getData('soldier');
+    if (soldierData) {
+      const soldier = JSON.parse(soldierData);
+      addToWheel(soldier);
+    }
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggedOver(true);
   };
 
   const removeFromWheel = (id: string) => {
@@ -130,10 +151,24 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
     });
   }, [selectedSoldiers]);
 
+  const filteredSoldiers = (soldiers || []).filter(s => 
+    s.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: 24 }}>
+    <div className="zodiac-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Card style={{ padding: 24, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <Card 
+          onDragOver={onDragOver}
+          onDragLeave={() => setIsDraggedOver(false)}
+          onDrop={onDrop}
+          style={{ 
+            padding: 24, textAlign: 'center', position: 'relative', overflow: 'hidden',
+            border: isDraggedOver ? '2px dashed var(--accent)' : 'none',
+            background: isDraggedOver ? 'var(--accent)11' : 'inherit',
+            transition: 'all 0.2s'
+          }}
+        >
           <h2 style={{ marginBottom: 20 }}>🎡 גלגל המזלות הפלוגתי</h2>
           
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -233,13 +268,27 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
         <h3 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Users size={18} /> רשימת הפלוגה
         </h3>
+        
+        <Input 
+          placeholder="חיפוש חייל..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ marginBottom: 16 }}
+        />
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {soldiers.map(s => (
-            <div key={s.id} style={{ 
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-              padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8,
-              opacity: selectedSoldiers.find(sel => sel.id === s.id) ? 0.5 : 1
-            }}>
+          {filteredSoldiers.map(s => (
+            <div 
+              key={s.id} 
+              draggable={!selectedSoldiers.find(sel => sel.id === s.id)}
+              onDragStart={(e) => onDragStart(e, s)}
+              style={{ 
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 8,
+                opacity: selectedSoldiers.find(sel => sel.id === s.id) ? 0.5 : 1,
+                cursor: selectedSoldiers.find(sel => sel.id === s.id) ? 'default' : 'grab'
+              }}
+            >
               <span style={{ fontSize: '0.9rem' }}>{s.full_name}</span>
               <Button 
                 variant="secondary" 
@@ -252,6 +301,9 @@ export default function ZodiacWheel({ soldiers }: { soldiers: Soldier[] }) {
               </Button>
             </div>
           ))}
+          {filteredSoldiers.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--text-dim)', padding: 20 }}>לא נמצאו חיילים</p>
+          )}
         </div>
       </Card>
 

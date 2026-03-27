@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
@@ -8,9 +8,9 @@ interface CardProps {
   style?: React.CSSProperties;
 }
 
-export const Card = ({ children, title, subtitle, className = '', style }: CardProps) => {
+export const Card = ({ children, title, subtitle, className = '', style, ...props }: CardProps) => {
   return (
-    <div className={`card ${className}`} style={style}>
+    <div className={`card ${className}`} style={style} {...props}>
       {(title || subtitle) && (
         <div className="section-header">
           <div>
