@@ -211,11 +211,26 @@ export default function GuardDutyPage() {
                         <div style={{ background: '#27ae6005', border: '1px solid #27ae6022', borderRadius: 12, padding: 16, textAlign: 'center' }}>
                           <CheckCircle size={24} style={{ color: '#27ae60', marginBottom: 8, opacity: 0.8 }} />
                           <h4 style={{ color: '#27ae60', fontWeight: 800, fontSize: '1rem', marginBottom: 4 }}>סבב הושלם</h4>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8, marginTop: 12 }}>
-                            {sortedShifts.map(s => (
-                              <div key={s.id} style={{ background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 8, display: 'flex', justifyContent: 'space-between', border: '1px solid var(--border)' }}>
-                                <span style={{ fontWeight: 800, color: 'var(--text-dim)', fontSize: '0.75rem' }}>{formatTime(s.start_time)}</span>
-                                <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.75rem' }}>{(s as any).soldiers?.full_name || 'שומר'}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                            {Object.entries(sortedShifts.reduce((acc, s) => {
+                              const t = new Date(s.start_time).getTime();
+                              acc[t] = acc[t] || [];
+                              acc[t].push(s);
+                              return acc;
+                            }, {} as Record<number, any[]>))
+                            .sort(([a], [b]) => Number(a) - Number(b))
+                            .map(([timeStr, tShifts]) => (
+                              <div key={timeStr} style={{ background: 'var(--bg-surface)', padding: '10px 14px', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border)' }}>
+                                <span style={{ fontWeight: 800, color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+                                  {formatTime(new Date(Number(timeStr)).toISOString())}
+                                </span>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, paddingRight: 16 }}>
+                                  {tShifts.map((s, idx) => (
+                                    <span key={s.id} style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem' }}>
+                                      {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                             ))}
                           </div>

@@ -27,6 +27,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body>
+        <div style={{ position: 'fixed', top: 5, left: 5, zIndex: 9999, fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)', pointerEvents: 'none', fontWeight: 800 }}>
+          v1.0.4
+        </div>
         <AuthWrapper>
           {children}
         </AuthWrapper>

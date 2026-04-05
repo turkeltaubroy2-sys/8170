@@ -450,13 +450,31 @@ export default function SoldierPortalPage() {
                   {isListFull ? (
                     <div style={{ background: 'rgba(39, 174, 96, 0.05)', borderRadius: 12, padding: 16, border: '1px dashed rgba(39, 174, 96, 0.3)' }}>
                       <p style={{ fontSize: '0.9rem', textAlign: 'center', marginBottom: 12, fontWeight: 700, color: '#27ae60' }}>שיבוץ הסתיים - רשימת שומרים:</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-                        {shifts.map(s => (
-                          <div key={s.id} style={{ fontSize: '0.8rem', padding: '6px 10px', background: 'var(--bg-surface)', borderRadius: 6, display: 'flex', justifyContent: 'space-between', border: s.soldier_id === soldier?.id ? '1px solid #27ae60' : 'none' }}>
-                            <span>{new Date(s.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</span>
-                            <span style={{ fontWeight: 600 }}>{(s as any).soldiers?.full_name || 'שומר'}</span>
-                          </div>
-                        ))}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {Object.entries(shifts.reduce((acc, s) => {
+                          const t = new Date(s.start_time).getTime();
+                          acc[t] = acc[t] || [];
+                          acc[t].push(s);
+                          return acc;
+                        }, {} as Record<number, any[]>))
+                        .sort(([a], [b]) => Number(a) - Number(b))
+                        .map(([timeStr, tShifts]) => {
+                          const hasMe = tShifts.some(s => s.soldier_id === soldier?.id);
+                          return (
+                            <div key={timeStr} style={{ fontSize: '0.85rem', padding: '10px 14px', background: 'var(--bg-surface)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: hasMe ? '1px solid #27ae60' : '1px solid var(--border)' }}>
+                              <span style={{ fontWeight: 800, color: hasMe ? '#27ae60' : 'var(--text-dim)' }}>
+                                {new Date(Number(timeStr)).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, paddingRight: 16 }}>
+                                {tShifts.map((s, idx) => (
+                                  <span key={s.id} style={{ fontWeight: s.soldier_id === soldier?.id ? 800 : 600, color: s.soldier_id === soldier?.id ? '#27ae60' : 'var(--text)' }}>
+                                    {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
