@@ -479,64 +479,102 @@ export default function SoldierPortalPage() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {shifts.map(shift => {
-                        const isMe = shift.soldier_id === soldier?.id;
-                        const isRequestedByMe = shift.requested_by_id === soldier?.id;
-                        const isTaken = (!!shift.soldier_id && !isMe) || (!!shift.requested_by_id && !isRequestedByMe);
-
+                      {Object.entries(shifts.reduce((acc, s) => {
+                        const t = new Date(s.start_time).getTime();
+                        acc[t] = acc[t] || [];
+                        acc[t].push(s);
+                        return acc;
+                      }, {} as Record<number, any[]>))
+                      .sort(([a], [b]) => Number(a) - Number(b))
+                      .map(([timeStr, tShifts]) => {
+                        const hasMe = tShifts.some(s => s.soldier_id === soldier?.id);
+                        const myRequest = tShifts.find(s => s.requested_by_id === soldier?.id && !s.soldier_id);
+                        
                         return (
-                          <div key={shift.id} style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          <div key={timeStr} style={{
                             padding: '12px 16px', borderRadius: 10,
-                            background: isMe ? 'rgba(39, 174, 96, 0.1)' : isRequestedByMe ? 'rgba(243, 156, 18, 0.1)' : isTaken ? 'rgba(0,0,0,0.1)' : 'var(--bg-surface)',
-                            border: isMe ? '1px solid #27ae60' : isRequestedByMe ? '1px solid #f39c12' : '1px solid transparent'
+                            background: hasMe ? 'rgba(39, 174, 96, 0.1)' : myRequest ? 'rgba(243, 156, 18, 0.1)' : 'var(--bg-surface)',
+                            border: hasMe ? '1px solid #27ae60' : myRequest ? '1px solid #f39c12' : '1px solid var(--border)'
                           }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: isTaken ? 'var(--text-muted)' : 'var(--text)' }}>
-                              {new Date(shift.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {new Date(shift.end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: hasMe ? '#27ae60' : 'var(--text)' }}>
+                                {new Date(Number(timeStr)).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} - {new Date(tShifts[0].end_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {hasMe ? (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#27ae60' }}>🛡️ שובצת</span>
+                              ) : myRequest ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f39c12' }}>⏳ בהמתנה</span>
+                                  <button 
+                                    className="btn btn-secondary btn-sm" 
+                                    style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#e74c3c' }}
+                                    onClick={async () => {
+                                      if (!confirm('האם לבטל את בקשת השיבוץ?')) return;
+                                      setSaving(true);
+                                      await supabase.from('guard_shifts').update({ requested_by_id: null }).eq('id', myRequest.id);
+                                      setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
+                                        ...e,
+                                        guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === myRequest.id ? { ...s, requested_by_id: null } : s)
+                                      } : e));
+                                      setSaving(false);
+                                    }}
+                                  >בטל</button>
+                                </div>
+                              ) : null}
+                            </div>
+                            
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                              {tShifts.map((shift, idx) => {
+                                const isMeShift = shift.soldier_id === soldier?.id;
+                                const isTaken = !!shift.soldier_id && !isMeShift;
+                                const isRequestedByMe = shift.requested_by_id === soldier?.id && !shift.soldier_id;
+                                const isTakenRequest = !!shift.requested_by_id && !isRequestedByMe && !shift.soldier_id;
+                                
+                                return (
+                                  <div key={shift.id} style={{ 
+                                    fontSize: '0.8rem', padding: '6px 12px', borderRadius: 8, 
+                                    background: isMeShift ? 'rgba(39, 174, 96, 0.2)' : isTaken ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.03)',
+                                    border: isTaken ? '1px solid transparent' : '1px solid var(--border)',
+                                    display: 'flex', alignItems: 'center', flex: '1 1 auto', justifyContent: 'center'
+                                  }}>
+                                    {isMeShift ? (
+                                      <span style={{ fontWeight: 800, color: '#27ae60' }}>אני ({(shift as any).soldiers?.full_name})</span>
+                                    ) : isTaken ? (
+                                      <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>
+                                        {(shift as any).soldiers?.full_name || 'נתפס'}
+                                      </span>
+                                    ) : isRequestedByMe ? (
+                                      <span style={{ color: '#f39c12', fontWeight: 600 }}>בקשה שלי</span>
+                                    ) : (
+                                      !hasMe && !myRequest && !isCommitted ? (
+                                        <button
+                                          className="btn btn-primary btn-sm"
+                                          disabled={saving}
+                                          style={{ padding: '4px 10px', fontSize: '0.75rem', width: '100%' }}
+                                          onClick={async () => {
+                                            if (!confirm('האם לבקש להשתבץ למשמרת זו?')) return;
+                                            setSaving(true);
+                                            await supabase.from('guard_shifts').update({ requested_by_id: soldier?.id }).eq('id', shift.id);
 
-                            {isMe ? (
-                              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#27ae60' }}>🛡️ שובצת</span>
-                            ) : isRequestedByMe ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f39c12' }}>⏳ בהמתנה</span>
-                                <button 
-                                  className="btn btn-secondary btn-sm" 
-                                  style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#e74c3c' }}
-                                  onClick={async () => {
-                                    if (!confirm('האם לבטל את בקשת השיבוץ?')) return;
-                                    setSaving(true);
-                                    await supabase.from('guard_shifts').update({ requested_by_id: null }).eq('id', shift.id);
-                                    setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
-                                      ...e,
-                                      guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: null } : s)
-                                    } : e));
-                                    setSaving(false);
-                                  }}
-                                >בטל</button>
-                              </div>
-                            ) : isTaken ? (
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>נתפס</span>
-                            ) : (
-                              <button
-                                className="btn btn-primary btn-sm"
-                                disabled={saving || isCommitted}
-                                title={isCommitted ? 'כבר בחרת משמרת ברשימה זו' : ''}
-                                onClick={async () => {
-                                  if (!confirm('האם לבקש להשתבץ למשמרת זו?')) return;
-                                  setSaving(true);
-                                  await supabase.from('guard_shifts').update({ requested_by_id: soldier?.id }).eq('id', shift.id);
-
-                                  setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
-                                    ...e,
-                                    guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: soldier?.id || null } : s)
-                                  } : e));
-                                  setSaving(false);
-                                }}
-                              >
-                                בקש שיבוץ
-                              </button>
-                            )}
+                                            setGuardEvents(prev => prev.map(e => e.id === ev.id ? {
+                                              ...e,
+                                              guard_shifts: e.guard_shifts.map((s: GuardShift) => s.id === shift.id ? { ...s, requested_by_id: soldier?.id || null } : s)
+                                            } : e));
+                                            setSaving(false);
+                                          }}
+                                        >
+                                          פנוי - בקש שיבוץ
+                                        </button>
+                                      ) : (
+                                        <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                          {isTakenRequest ? 'ממתין לאישור סגל' : 'פנוי'}
+                                        </span>
+                                      )
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         );
                       })}
