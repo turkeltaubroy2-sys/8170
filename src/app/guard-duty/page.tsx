@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { Clock, MapPin, Users, CheckCircle, Trash2, Shield, AlertTriangle } from 'lucide-react';
+import { Clock, MapPin, Users, CheckCircle, Trash2, Shield, AlertTriangle, Phone, Copy, X } from 'lucide-react';
 
 type GuardEvent = {
   id: string;
@@ -41,6 +41,7 @@ export default function GuardDutyPage() {
   });
   const [saving, setSaving] = useState(false);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
+  const [phonePopup, setPhonePopup] = useState<{ name: string, phone: string | null } | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -221,22 +222,16 @@ export default function GuardDutyPage() {
                             .sort(([a], [b]) => Number(a) - Number(b))
                             .map(([timeStr, tShifts]) => (
                               <div key={timeStr} style={{ background: 'var(--bg-surface)', padding: '10px 14px', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border)' }}>
-                                <span style={{ fontWeight: 800, color: 'var(--text-dim)', fontSize: '0.85rem' }}>
-                                  {formatTime(new Date(Number(timeStr)).toISOString())}
-                                </span>
-                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, paddingRight: 16 }}>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-start', flex: 1, paddingLeft: 16 }}>
                                   {tShifts.map((s, idx) => (
                                     <span 
                                       key={s.id} 
                                       style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline dotted' }}
                                       onClick={() => {
-                                        const phone = s.soldiers?.phone;
-                                        const name = (s as any).soldiers?.full_name || 'שומר';
-                                        if (phone) {
-                                          alert(`טלפון של ${name}: ${phone}`);
-                                        } else {
-                                          alert(`הטלפון של ${name} לא מעודכן במערכת`);
-                                        }
+                                        setPhonePopup({
+                                          name: (s as any).soldiers?.full_name || 'שומר',
+                                          phone: s.soldiers?.phone || null
+                                        });
                                       }}
                                       title="לחץ להצגת טלפון"
                                     >
@@ -244,6 +239,9 @@ export default function GuardDutyPage() {
                                     </span>
                                   ))}
                                 </div>
+                                <span style={{ fontWeight: 800, color: 'var(--text-dim)', fontSize: '0.85rem' }}>
+                                  {formatTime(new Date(Number(timeStr)).toISOString())}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -458,6 +456,43 @@ export default function GuardDutyPage() {
           </div>
         )}
       </main>
+
+      {phonePopup && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setPhonePopup(null)}>
+          <div style={{ background: 'var(--bg-surface)', padding: 24, borderRadius: 20, width: '100%', maxWidth: 360, border: '1px solid var(--border)', position: 'relative', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>פרטי קשר</h3>
+              <button onClick={() => setPhonePopup(null)} style={{ background: 'rgba(0,0,0,0.05)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-dim)' }}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div style={{ textAlign: 'center', padding: '10px 0 20px 0' }}>
+               <div style={{ width: 64, height: 64, background: 'var(--primary-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--primary)' }}>
+                 <Phone size={32} />
+               </div>
+               <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{phonePopup.name}</div>
+               {phonePopup.phone ? (
+                 <>
+                   <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: 1, margin: '12px 0' }}>{phonePopup.phone}</div>
+                   <button 
+                     className="btn btn-primary"
+                     style={{ width: '100%', gap: 8, marginTop: 16, height: 48, fontSize: '1rem' }}
+                     onClick={() => {
+                        navigator.clipboard.writeText(phonePopup.phone || '');
+                        alert('המספר הועתק ללוח!');
+                     }}
+                   >
+                     <Copy size={20} /> העתק מספר
+                   </button>
+                 </>
+               ) : (
+                 <div style={{ color: 'var(--text-dim)', fontSize: '0.9rem', background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: 12, marginTop: 10 }}>מספר טלפון לא מעודכן במערכת</div>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

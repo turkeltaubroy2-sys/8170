@@ -28,7 +28,7 @@ export default function RootLayout({
       </head>
       <body>
         <div style={{ position: 'fixed', top: 5, left: 5, zIndex: 9999, fontSize: '0.65rem', color: 'rgba(0,0,0,0.4)', pointerEvents: 'none', fontWeight: 800 }}>
-          v1.1.0
+          v1.1.1
         </div>
         <AuthWrapper>
           {children}
