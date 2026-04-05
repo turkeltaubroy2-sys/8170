@@ -228,7 +228,7 @@ export default function GuardDutyPage() {
                                   {tShifts.map((s, idx) => (
                                     <span 
                                       key={s.id} 
-                                      style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem', cursor: s.soldiers?.phone ? 'pointer' : 'default' }}
+                                      style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem', cursor: s.soldiers?.phone ? 'pointer' : 'default', textDecoration: s.soldiers?.phone ? 'underline dotted' : 'none' }}
                                       onClick={() => {
                                         if (s.soldiers?.phone) {
                                           alert(`טלפון של ${(s as any).soldiers?.full_name}: ${s.soldiers.phone}`);
@@ -278,7 +278,7 @@ export default function GuardDutyPage() {
                                       )}
                                       {shift.soldier_id && (
                                         <div 
-                                          style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem', cursor: shift.soldiers?.phone ? 'pointer' : 'default' }}
+                                          style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem', cursor: shift.soldiers?.phone ? 'pointer' : 'default', textDecoration: shift.soldiers?.phone ? 'underline dotted' : 'none' }}
                                           onClick={() => {
                                             if (shift.soldiers?.phone) {
                                               alert(`טלפון של ${(shift as any).soldiers?.full_name}: ${shift.soldiers.phone}`);
