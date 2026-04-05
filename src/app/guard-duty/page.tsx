@@ -228,13 +228,17 @@ export default function GuardDutyPage() {
                                   {tShifts.map((s, idx) => (
                                     <span 
                                       key={s.id} 
-                                      style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem', cursor: s.soldiers?.phone ? 'pointer' : 'default', textDecoration: s.soldiers?.phone ? 'underline dotted' : 'none' }}
+                                      style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline dotted' }}
                                       onClick={() => {
-                                        if (s.soldiers?.phone) {
-                                          alert(`טלפון של ${(s as any).soldiers?.full_name}: ${s.soldiers.phone}`);
+                                        const phone = s.soldiers?.phone;
+                                        const name = (s as any).soldiers?.full_name || 'שומר';
+                                        if (phone) {
+                                          alert(`טלפון של ${name}: ${phone}`);
+                                        } else {
+                                          alert(`הטלפון של ${name} לא מעודכן במערכת`);
                                         }
                                       }}
-                                      title={s.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                      title="לחץ להצגת טלפון"
                                     >
                                       {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
                                     </span>
@@ -278,13 +282,17 @@ export default function GuardDutyPage() {
                                       )}
                                       {shift.soldier_id && (
                                         <div 
-                                          style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem', cursor: shift.soldiers?.phone ? 'pointer' : 'default', textDecoration: shift.soldiers?.phone ? 'underline dotted' : 'none' }}
+                                          style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline dotted' }}
                                           onClick={() => {
-                                            if (shift.soldiers?.phone) {
-                                              alert(`טלפון של ${(shift as any).soldiers?.full_name}: ${shift.soldiers.phone}`);
+                                            const phone = shift.soldiers?.phone;
+                                            const name = (shift as any).soldiers?.full_name;
+                                            if (phone) {
+                                              alert(`טלפון של ${name}: ${phone}`);
+                                            } else {
+                                              alert(`הטלפון של ${name} לא מעודכן במערכת`);
                                             }
                                           }}
-                                          title={shift.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                          title="לחץ להצגת טלפון"
                                         >
                                           <CheckCircle size={14} /> {(shift as any).soldiers?.full_name}
                                         </div>

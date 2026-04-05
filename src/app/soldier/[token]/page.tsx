@@ -467,18 +467,27 @@ export default function SoldierPortalPage() {
                               </span>
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, paddingRight: 16 }}>
                                 {tShifts.map((s, idx) => (
-                                  <span 
-                                    key={s.id} 
-                                    style={{ fontWeight: s.soldier_id === soldier?.id ? 800 : 600, color: s.soldier_id === soldier?.id ? '#27ae60' : 'var(--text)', cursor: s.soldiers?.phone ? 'pointer' : 'default', textDecoration: s.soldiers?.phone ? 'underline dotted' : 'none' }}
-                                    onClick={() => {
-                                      if (s.soldiers?.phone) {
-                                        alert(`טלפון של ${(s as any).soldiers?.full_name}: ${s.soldiers.phone}`);
-                                      }
-                                    }}
-                                    title={s.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
-                                  >
-                                    {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
-                                  </span>
+                                   <span 
+                                     key={s.id} 
+                                     style={{ 
+                                       fontWeight: s.soldier_id === soldier?.id ? 800 : 600, 
+                                       color: s.soldier_id === soldier?.id ? '#27ae60' : 'var(--text)', 
+                                       cursor: 'pointer', 
+                                       textDecoration: 'underline dotted' 
+                                     }}
+                                     onClick={() => {
+                                       const phone = s.soldiers?.phone;
+                                       const name = (s as any).soldiers?.full_name || (s.soldier_id === soldier?.id ? soldier?.full_name : 'שומר');
+                                       if (phone) {
+                                         alert(`טלפון של ${name}: ${phone}`);
+                                       } else {
+                                         alert(`הטלפון של ${name} לא מעודכן במערכת`);
+                                       }
+                                     }}
+                                     title="לחץ להצגת טלפון"
+                                   >
+                                     {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
+                                   </span>
                                 ))}
                               </div>
                             </div>
@@ -548,25 +557,32 @@ export default function SoldierPortalPage() {
                                   }}>
                                     {isMeShift ? (
                                       <span 
-                                        style={{ fontWeight: 800, color: '#27ae60', cursor: shift.soldiers?.phone ? 'pointer' : 'default', textDecoration: shift.soldiers?.phone ? 'underline dotted' : 'none' }}
+                                        style={{ fontWeight: 800, color: '#27ae60', cursor: 'pointer', textDecoration: 'underline dotted' }}
                                         onClick={() => {
-                                          if (shift.soldiers?.phone) {
-                                            alert(`הטלפון שלי (${soldier?.full_name}): ${shift.soldiers.phone}`);
+                                          const phone = shift.soldiers?.phone;
+                                          if (phone) {
+                                            alert(`הטלפון שלי (${soldier?.full_name}): ${phone}`);
+                                          } else {
+                                            alert(`הטלפון שלך (${soldier?.full_name}) לא מעודכן במערכת`);
                                           }
                                         }}
-                                        title={shift.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                        title="לחץ להצגת טלפון"
                                       >
                                         אני ({(shift as any).soldiers?.full_name})
                                       </span>
                                     ) : isTaken ? (
                                       <span 
-                                        style={{ color: 'var(--text-dim)', fontWeight: 600, cursor: shift.soldiers?.phone ? 'pointer' : 'default', textDecoration: shift.soldiers?.phone ? 'underline dotted' : 'none' }}
+                                        style={{ color: 'var(--text-dim)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline dotted' }}
                                         onClick={() => {
-                                          if (shift.soldiers?.phone) {
-                                            alert(`טלפון של ${(shift as any).soldiers?.full_name}: ${shift.soldiers.phone}`);
+                                          const phone = shift.soldiers?.phone;
+                                          const name = (shift as any).soldiers?.full_name;
+                                          if (phone) {
+                                            alert(`טלפון של ${name}: ${phone}`);
+                                          } else {
+                                            alert(`הטלפון של ${name} לא מעודכן במערכת`);
                                           }
                                         }}
-                                        title={shift.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                        title="לחץ להצגת טלפון"
                                       >
                                         {(shift as any).soldiers?.full_name || 'נתפס'}
                                       </span>
