@@ -236,40 +236,45 @@ export default function GuardDutyPage() {
                           </div>
                         </div>
                       ) : (
-                        <div style={{ background: 'var(--bg-surface)', borderRadius: 10, overflowX: 'auto', border: '1px solid var(--border)' }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '450px' }}>
-                            <thead>
-                              <tr style={{ background: 'rgba(0,0,0,0.02)' }}>
-                                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>שעה</th>
-                                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>בקשה</th>
-                                <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>שיבוץ</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {sortedShifts.map(shift => (
-                                <tr key={shift.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                                  <td style={{ padding: '10px 12px', fontWeight: 700, fontSize: '0.8rem', color: 'var(--text)' }}>
-                                    {formatTime(shift.start_time)}
-                                  </td>
-                                  <td style={{ padding: '10px 12px' }}>
-                                    {shift.soldier_id ? (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem' }}>
-                                        <CheckCircle size={12} /> {(shift as any).soldiers?.full_name}
-                                      </div>
-                                    ) : shift.requested_by_id ? (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <Badge style={{ background: '#f39c1215', color: '#f39c12', fontSize: '0.7rem', padding: '1px 6px' }}>
-                                          {(shift as any).requester?.full_name || 'חייל'}
-                                        </Badge>
-                                        <button onClick={() => confirmRequest(shift)} style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 4, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}>אשר</button>
-                                      </div>
-                                    ) : (
-                                      <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontStyle: 'italic' }}>—</span>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: '10px 12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {Object.entries(sortedShifts.reduce((acc, s) => {
+                            const t = new Date(s.start_time).getTime();
+                            acc[t] = acc[t] || [];
+                            acc[t].push(s);
+                            return acc;
+                          }, {} as Record<number, any[]>))
+                          .sort(([a], [b]) => Number(a) - Number(b))
+                          .map(([timeStr, tShifts]) => (
+                            <div key={timeStr} style={{ background: 'var(--bg-surface)', padding: '12px 16px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid var(--border)' }}>
+                              <span style={{ fontWeight: 800, color: 'var(--text)', fontSize: '0.9rem' }}>
+                                {formatTime(new Date(Number(timeStr)).toISOString())} - {formatTime(tShifts[0].end_time)}
+                              </span>
+                              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                {tShifts.map((shift, idx) => (
+                                  <div key={shift.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px', background: 'rgba(0,0,0,0.02)', borderRadius: 8, border: '1px solid rgba(0,0,0,0.05)', flex: '1 1 200px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)' }}>
+                                        עמדה {idx + 1}
+                                      </span>
+                                      {shift.requested_by_id && !shift.soldier_id && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                          <Badge style={{ background: '#f39c1215', color: '#f39c12', fontSize: '0.75rem', padding: '1px 6px' }}>
+                                            {(shift as any).requester?.full_name || 'חייל'}
+                                          </Badge>
+                                          <button onClick={() => confirmRequest(shift)} style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 4, padding: '2px 8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>אשר</button>
+                                        </div>
+                                      )}
+                                      {!shift.requested_by_id && !shift.soldier_id && (
+                                        <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontStyle: 'italic' }}>פנוי</span>
+                                      )}
+                                      {shift.soldier_id && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#27ae60', fontWeight: 800, fontSize: '0.8rem' }}>
+                                          <CheckCircle size={14} /> {(shift as any).soldiers?.full_name}
+                                        </div>
+                                      )}
+                                    </div>
                                     <Select 
-                                      style={{ width: '100%', maxWidth: '140px', marginBottom: 0, fontSize: '0.75rem', padding: '4px' }}
+                                      style={{ width: '100%', marginBottom: 0, fontSize: '0.85rem', padding: '6px' }}
                                       value={shift.soldier_id || ''}
                                       onChange={(e) => assignSoldier(shift.id, e.target.value)}
                                       options={[
@@ -277,11 +282,11 @@ export default function GuardDutyPage() {
                                         ...targetSols.map(s => ({ value: s.id, label: s.full_name }))
                                       ]}
                                     />
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </Card>
