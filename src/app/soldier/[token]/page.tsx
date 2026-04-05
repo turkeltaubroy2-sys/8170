@@ -103,7 +103,7 @@ export default function SoldierPortalPage() {
     }
 
     const { data: eventsData } = await supabase.from('guard_events')
-      .select('*, guard_shifts(*)')
+      .select('*, guard_shifts(*, soldiers:soldier_id(full_name), requester:requested_by_id(full_name))')
       .eq('status', 'published')
       .order('created_at', { ascending: false });
     if (eventsData) setGuardEvents(eventsData);
