@@ -103,7 +103,7 @@ export default function SoldierPortalPage() {
     }
 
     const { data: eventsData } = await supabase.from('guard_events')
-      .select('*, guard_shifts(*, soldiers:soldier_id(full_name), requester:requested_by_id(full_name))')
+      .select('*, guard_shifts(*, soldiers:soldier_id(full_name,phone), requester:requested_by_id(full_name))')
       .eq('status', 'published')
       .order('created_at', { ascending: false });
     if (eventsData) setGuardEvents(eventsData);
@@ -467,7 +467,16 @@ export default function SoldierPortalPage() {
                               </span>
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, paddingRight: 16 }}>
                                 {tShifts.map((s, idx) => (
-                                  <span key={s.id} style={{ fontWeight: s.soldier_id === soldier?.id ? 800 : 600, color: s.soldier_id === soldier?.id ? '#27ae60' : 'var(--text)' }}>
+                                  <span 
+                                    key={s.id} 
+                                    style={{ fontWeight: s.soldier_id === soldier?.id ? 800 : 600, color: s.soldier_id === soldier?.id ? '#27ae60' : 'var(--text)', cursor: s.soldiers?.phone ? 'pointer' : 'default' }}
+                                    onClick={() => {
+                                      if (s.soldiers?.phone) {
+                                        alert(`טלפון של ${(s as any).soldiers?.full_name}: ${s.soldiers.phone}`);
+                                      }
+                                    }}
+                                    title={s.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                  >
                                     {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
                                   </span>
                                 ))}
@@ -540,7 +549,15 @@ export default function SoldierPortalPage() {
                                     {isMeShift ? (
                                       <span style={{ fontWeight: 800, color: '#27ae60' }}>אני ({(shift as any).soldiers?.full_name})</span>
                                     ) : isTaken ? (
-                                      <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>
+                                      <span 
+                                        style={{ color: 'var(--text-dim)', fontWeight: 600, cursor: shift.soldiers?.phone ? 'pointer' : 'default' }}
+                                        onClick={() => {
+                                          if (shift.soldiers?.phone) {
+                                            alert(`טלפון של ${(shift as any).soldiers?.full_name}: ${shift.soldiers.phone}`);
+                                          }
+                                        }}
+                                        title={shift.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                      >
                                         {(shift as any).soldiers?.full_name || 'נתפס'}
                                       </span>
                                     ) : isRequestedByMe ? (

@@ -171,6 +171,6 @@ export type GuardShift = {
   start_time: string;
   end_time: string;
   created_at: string;
-  soldiers?: Pick<Soldier, 'full_name'>;
+  soldiers?: Pick<Soldier, 'full_name' | 'phone'>;
   requested_by?: Pick<Soldier, 'full_name'>;
 };

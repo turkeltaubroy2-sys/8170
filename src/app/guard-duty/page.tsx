@@ -46,7 +46,7 @@ export default function GuardDutyPage() {
     try {
       const [evs, sols] = await Promise.all([
         supabase.from('guard_events')
-          .select('*, guard_shifts(*, soldiers:soldier_id(full_name), requester:requested_by_id(full_name))')
+          .select('*, guard_shifts(*, soldiers:soldier_id(full_name,phone), requester:requested_by_id(full_name))')
           .order('created_at', { ascending: false }),
         supabase.from('soldiers').select('*, soldier_portals(status)').order('full_name')
       ]);
@@ -226,7 +226,16 @@ export default function GuardDutyPage() {
                                 </span>
                                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', flex: 1, paddingRight: 16 }}>
                                   {tShifts.map((s, idx) => (
-                                    <span key={s.id} style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem' }}>
+                                    <span 
+                                      key={s.id} 
+                                      style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.85rem', cursor: s.soldiers?.phone ? 'pointer' : 'default' }}
+                                      onClick={() => {
+                                        if (s.soldiers?.phone) {
+                                          alert(`טלפון של ${(s as any).soldiers?.full_name}: ${s.soldiers.phone}`);
+                                        }
+                                      }}
+                                      title={s.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                    >
                                       {(s as any).soldiers?.full_name || 'שומר'}{idx < tShifts.length - 1 ? ' •' : ''}
                                     </span>
                                   ))}
@@ -268,7 +277,15 @@ export default function GuardDutyPage() {
                                         <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontStyle: 'italic' }}>פנוי</span>
                                       )}
                                       {shift.soldier_id && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#27ae60', fontWeight: 800, fontSize: '0.8rem' }}>
+                                        <div 
+                                          style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#27ae60', fontWeight: 700, fontSize: '0.8rem', cursor: shift.soldiers?.phone ? 'pointer' : 'default' }}
+                                          onClick={() => {
+                                            if (shift.soldiers?.phone) {
+                                              alert(`טלפון של ${(shift as any).soldiers?.full_name}: ${shift.soldiers.phone}`);
+                                            }
+                                          }}
+                                          title={shift.soldiers?.phone ? 'לחץ להצגת טלפון' : ''}
+                                        >
                                           <CheckCircle size={14} /> {(shift as any).soldiers?.full_name}
                                         </div>
                                       )}
