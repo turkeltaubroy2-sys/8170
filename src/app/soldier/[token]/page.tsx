@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift } from '@/lib/supabase';
-import { MapPin, Backpack, Shield, Send, Bell, Calendar, Camera, X, Image as ImageIcon, Plus, Phone, Copy } from 'lucide-react';
+import { supabase, Soldier, SoldierPortal, Schedule, Message, GuardShift, Mission, MissionItem } from '@/lib/supabase';
+import { MapPin, Backpack, Shield, Send, Bell, Calendar, Camera, X, Image as ImageIcon, Plus, Phone, Copy, ClipboardList, CheckCircle2, Circle } from 'lucide-react';
 import Image from 'next/image';
 import SoldierRequests from '@/components/SoldierRequests';
 import SoldierDatabases from '@/components/SoldierDatabases';
@@ -66,7 +66,9 @@ export default function SoldierPortalPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'databases' | 'guard' | 'equipment' | 'messages' | 'zodiac'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'requests' | 'databases' | 'guard' | 'equipment' | 'messages' | 'zodiac' | 'missions'>('status');
+  const [productMissions, setProductMissions] = useState<Mission[]>([]);
+  const [productMissionItems, setProductMissionItems] = useState<Record<string, MissionItem[]>>({});
   const [allSoldiers, setAllSoldiers] = useState<{id: string, full_name: string, department_id: string}[]>([]);
   const [guardEvents, setGuardEvents] = useState<GuardEventWithShifts[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -141,6 +143,29 @@ export default function SoldierPortalPage() {
     // Fetch all soldiers for the wheel
     const { data: allS } = await supabase.from('soldiers').select('id, full_name, department_id').order('full_name');
     if (allS) setAllSoldiers(allS);
+
+    // Fetch Product Lists (Advanced Missions)
+    const { data: pmData } = await supabase.from('missions').select('*').order('created_at', { ascending: false });
+    if (pmData) {
+      const filteredPM = pmData.filter(m => {
+        if (!m.visibility_soldier_ids || m.visibility_soldier_ids.length === 0) return true;
+        return m.visibility_soldier_ids.includes(soldierData.id);
+      });
+      setProductMissions(filteredPM);
+
+      if (filteredPM.length > 0) {
+        const itemResults = await Promise.all(
+          filteredPM.map(m => 
+            supabase.from('mission_items').select('*').eq('mission_id', m.id).order('created_at', { ascending: true })
+          )
+        );
+        const newItems: Record<string, MissionItem[]> = {};
+        filteredPM.forEach((m, i) => {
+          newItems[m.id] = itemResults[i].data || [];
+        });
+        setProductMissionItems(newItems);
+      }
+    }
 
     setLoading(false);
   }, [token]);
@@ -256,6 +281,20 @@ export default function SoldierPortalPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateProductItemStatus = async (missionId: string, itemId: string, currentStatus: string, options: string[]) => {
+    // Determine next status in rotation
+    const currentIndex = options.indexOf(currentStatus);
+    const nextIndex = (currentIndex + 1) % options.length;
+    const nextStatus = options[nextIndex];
+
+    await supabase.from('mission_items').update({ status: nextStatus }).eq('id', itemId);
+    
+    setProductMissionItems(prev => ({
+      ...prev,
+      [missionId]: prev[missionId].map(item => item.id === itemId ? { ...item, status: nextStatus } : item)
+    }));
   };
 
   if (loading) return (
@@ -389,6 +428,13 @@ export default function SoldierPortalPage() {
           >
              <span>🎡</span> גלגל המזלות
           </button>
+          <button
+            className={activeTab === 'missions' ? 'active' : ''}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1rem', color: activeTab === 'missions' ? 'var(--accent)' : 'var(--text-muted)' }}
+            onClick={() => setActiveTab('missions')}
+          >
+             <ClipboardList size={16} /> משימות
+          </button>
         </div>
 
         {saved && activeTab === 'status' && (
@@ -398,6 +444,53 @@ export default function SoldierPortalPage() {
         {activeTab === 'requests' && soldier && <SoldierRequests soldierId={soldier.id} soldierRole={soldier.role} soldierName={soldier.full_name} />}
         {activeTab === 'databases' && soldier && <SoldierDatabases />}
         {activeTab === 'zodiac' && <ZodiacWheel soldiers={allSoldiers} />}
+
+        {activeTab === 'missions' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {productMissions.length === 0 ? (
+              <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+                <ClipboardList size={40} style={{ margin: '0 auto 12px', color: 'var(--text-muted)' }} />
+                <p style={{ color: 'var(--text-muted)' }}>אין משימות או רשימות קניות שהוקצו אליך כרגע.</p>
+              </div>
+            ) : productMissions.map(mission => (
+              <div key={mission.id} className="card" style={{ padding: 20 }}>
+                <div style={{ marginBottom: 16 }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--accent)' }}>{mission.title}</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: 4 }}>{mission.type === 'product_list' ? 'רשימת מוצרים' : 'משימה'}</p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {(productMissionItems[mission.id] || []).map(item => {
+                    const statusColor = item.status === 'בוצע' ? '#27ae60' : item.status === 'קנייה' ? '#e74c3c' : 'var(--text-muted)';
+                    return (
+                      <div key={item.id} style={{ 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                        padding: '12px 16px', background: 'var(--bg-surface)', borderRadius: 12,
+                        border: '1px solid var(--border)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          {item.status === 'בוצע' ? <CheckCircle2 size={20} color="#27ae60" /> : <Circle size={20} color="var(--text-dim)" />}
+                          <span style={{ fontSize: '1rem', fontWeight: 600, textDecoration: item.status === 'בוצע' ? 'line-through' : 'none', opacity: item.status === 'בוצע' ? 0.6 : 1 }}>
+                            {item.name}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => updateProductItemStatus(mission.id, item.id, item.status, mission.status_options)}
+                          style={{ 
+                            background: 'none', border: `1px solid ${statusColor}`, color: statusColor,
+                            fontSize: '0.75rem', fontWeight: 800, padding: '4px 10px', borderRadius: 20, cursor: 'pointer'
+                          }}
+                        >
+                          {item.status}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {activeTab === 'messages' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

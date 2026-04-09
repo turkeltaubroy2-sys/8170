@@ -33,7 +33,7 @@ export default function Dashboard() {
           .gte('start_time', new Date().toISOString().split('T')[0])
           .order('start_time', { ascending: true })
           .limit(5),
-        supabase.from('lists').select('id', { count: 'exact', head: true }),
+        supabase.from('missions').select('id', { count: 'exact', head: true }),
         supabase.from('logistics').select('id', { count: 'exact', head: true }),
       ]);
 
