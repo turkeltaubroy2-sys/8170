@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
+import MissionsTab from '@/components/MissionsTab';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -16,6 +17,7 @@ export default function Dashboard() {
   });
   const [upcomingEvents, setUpcomingEvents] = useState<{ id: string; title: string; start_time: string; location?: string; color?: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'missions'>('dashboard');
 
   useEffect(() => {
     fetchStats();
@@ -74,8 +76,29 @@ export default function Dashboard() {
           badge="🎖️ פלוגה 8170"
         />
 
+        <div className="tab-menu" style={{ display: 'flex', gap: 20, borderBottom: '1px solid var(--border)', marginBottom: 24, padding: '0 24px 10px 24px' }}>
+          {[
+            { tag: 'dashboard', label: '🏠 לוח בקרה' },
+            { tag: 'missions', label: '📋 משימות' },
+          ].map(tab => (
+            <button key={tab.tag}
+              style={{ 
+                background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Heebo', fontSize: '1.05rem', 
+                fontWeight: activeTab === tab.tag ? 700 : 500, color: activeTab === tab.tag ? 'var(--accent)' : 'var(--text-muted)', 
+                borderBottom: activeTab === tab.tag ? '3px solid var(--accent)' : '3px solid transparent',
+                padding: '0 4px 6px 4px', transition: 'all 0.2s'
+              }}
+              onClick={() => setActiveTab(tab.tag as 'dashboard' | 'missions')}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="page-body">
-          {/* Hero Banner */}
+          {activeTab === 'dashboard' ? (
+            <>
+              {/* Hero Banner */}
           <div className="hero-banner">
             <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', opacity: 0.04, backgroundImage: 'repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)', backgroundSize: '8px 8px' }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
@@ -145,7 +168,6 @@ export default function Dashboard() {
               </div>
             </Card>
           </div>
-
           {/* Info Banner */}
           <div style={{
             background: 'rgba(200,168,75,0.08)',
@@ -161,6 +183,10 @@ export default function Dashboard() {
             <span style={{ fontSize: '1.2rem' }}>💡</span>
             <span>כל חייל מקבל לינק אישי לפורטל שלו דרך דף <strong style={{ color: 'var(--accent)' }}>אנשי הפלוגה</strong>. הסגל יכול לצפות בכל הנתונים דרך <strong style={{ color: 'var(--accent)' }}>מבט על - סגל</strong>.</span>
           </div>
+            </>
+          ) : (
+            <MissionsTab />
+          )}
         </div>
       </main>
     </div>

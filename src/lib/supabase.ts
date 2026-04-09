@@ -174,3 +174,21 @@ export type GuardShift = {
   soldiers?: Pick<Soldier, 'full_name' | 'phone'>;
   requested_by?: Pick<Soldier, 'full_name'>;
 };
+
+export type Mission = {
+  id: string;
+  title: string;
+  type: string;
+  status_options: string[];
+  visibility_soldier_ids: string[];
+  created_by: string;
+  created_at: string;
+};
+
+export type MissionItem = {
+  id: string;
+  mission_id: string;
+  name: string;
+  status: string;
+  created_at: string;
+};
