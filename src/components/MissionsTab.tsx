@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Select } from '@/components/ui/Select';
-import { Plus, Trash2, Users, ClipboardList } from 'lucide-react';
+import { Input } from '@/components/ui/Input';
+import { Plus, Trash2, Users, ClipboardList, Trash } from 'lucide-react';
 import CreateProductListModal from './CreateProductListModal';
 
 export default function MissionsTab() {
@@ -15,9 +16,10 @@ export default function MissionsTab() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [soldiers, setSoldiers] = useState<Pick<Soldier, 'id' | 'full_name'>[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<Soldier | null>(null);
+  const [newItemName, setNewItemName] = useState<Record<string, string>>({});
 
-  const fetchMissions = useCallback(async () => {
+  const fetchMissions = useCallback(async (currentSoldierId?: string) => {
     try {
       const { data: missionsData, error: mError } = await supabase
         .from('missions')
@@ -26,18 +28,25 @@ export default function MissionsTab() {
 
       if (mError) throw mError;
 
-      setMissions(missionsData || []);
+      // Client-side visibility filtering
+      const filteredMissions = (missionsData || []).filter(m => {
+        if (!m.visibility_soldier_ids || m.visibility_soldier_ids.length === 0) return true;
+        if (currentSoldierId && (m.created_by === currentSoldierId || m.visibility_soldier_ids.includes(currentSoldierId))) return true;
+        return false;
+      });
+
+      setMissions(filteredMissions);
 
       // Fetch items for each mission
-      if (missionsData) {
+      if (filteredMissions.length > 0) {
         const itemResults = await Promise.all(
-          missionsData.map(m => 
+          filteredMissions.map(m => 
             supabase.from('mission_items').select('*').eq('mission_id', m.id).order('created_at', { ascending: true })
           )
         );
 
         const newItems: Record<string, MissionItem[]> = {};
-        missionsData.forEach((m, i) => {
+        filteredMissions.forEach((m, i) => {
           newItems[m.id] = itemResults[i].data || [];
         });
         setItems(newItems);
@@ -55,11 +64,24 @@ export default function MissionsTab() {
   }, []);
 
   useEffect(() => {
-    const userJson = localStorage.getItem('plugah_user');
-    if (userJson) setCurrentUser(JSON.parse(userJson));
-    
-    fetchMissions();
-    fetchSoldiers();
+    const init = async () => {
+      const userJson = localStorage.getItem('plugah_user');
+      if (userJson) {
+        const localUser = JSON.parse(userJson);
+        // Find the full profile to get the ID
+        const { data: profile } = await supabase.from('soldiers').select('*').eq('full_name', localUser.name).single();
+        if (profile) {
+          setCurrentUser(profile);
+          fetchMissions(profile.id);
+        } else {
+          fetchMissions();
+        }
+      } else {
+        fetchMissions();
+      }
+      fetchSoldiers();
+    };
+    init();
   }, [fetchMissions, fetchSoldiers]);
 
   const updateItemStatus = async (missionId: string, itemId: string, newStatus: string) => {
@@ -70,8 +92,42 @@ export default function MissionsTab() {
     }));
   };
 
+  const addItem = async (missionId: string) => {
+    const name = newItemName[missionId];
+    if (!name) return;
+
+    const mission = missions.find(m => m.id === missionId);
+    if (!mission) return;
+
+    const { data: newItem, error } = await supabase.from('mission_items').insert({
+      mission_id: missionId,
+      name,
+      status: mission.status_options[0]
+    }).select().single();
+
+    if (error) {
+      console.error('Error adding item:', error);
+      return;
+    }
+
+    setItems(prev => ({
+      ...prev,
+      [missionId]: [...(prev[missionId] || []), newItem]
+    }));
+    setNewItemName(prev => ({ ...prev, [missionId]: '' }));
+  };
+
+  const deleteItem = async (missionId: string, itemId: string) => {
+    if (!confirm('האם למחוק פריט זה?')) return;
+    await supabase.from('mission_items').delete().eq('id', itemId);
+    setItems(prev => ({
+      ...prev,
+      [missionId]: prev[missionId].filter(i => i.id !== itemId)
+    }));
+  };
+
   const deleteMission = async (id: string) => {
-    if (!confirm('האם למחוק את הרשימה?')) return;
+    if (!confirm('האם למחוק את כל הרשימה?')) return;
     await supabase.from('missions').delete().eq('id', id);
     setMissions(prev => prev.filter(m => m.id !== id));
   };
@@ -83,7 +139,9 @@ export default function MissionsTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>📋 ניהול משימות ורשימות</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 4 }}>צור ועקוב אחר משימות פלוגתיות</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 4 }}>
+            שלום, <strong style={{color: 'var(--accent)'}}>{currentUser?.full_name || 'אורח'}</strong>. צפה וערוך את המשימות הרלוונטיות אליך.
+          </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
           <Plus size={18} /> יצירת משימה חדשה
@@ -93,8 +151,8 @@ export default function MissionsTab() {
       {missions.length === 0 ? (
         <Card style={{ textAlign: 'center', padding: 60 }}>
           <ClipboardList size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>אין משימות פעילות</h3>
-          <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>תהיו הראשונים ליצור משימה חדשה עבור הפלוגה.</p>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>אין משימות זמינות בשבילך</h3>
+          <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>יתכן שאין משימות פתוחות כרגע, או שאין לך הרשאה לצפות בהן.</p>
           <Button variant="secondary" onClick={() => setShowCreateModal(true)} style={{ marginTop: 20 }}>
             <Plus size={16} /> צור משימה ראשונה
           </Button>
@@ -109,7 +167,7 @@ export default function MissionsTab() {
                 {mission.visibility_soldier_ids && mission.visibility_soldier_ids.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, fontSize: '0.8rem', color: 'var(--text-dim)', background: 'var(--bg-surface)', padding: '4px 10px', borderRadius: 20, width: 'fit-content' }}>
                     <Users size={14} />
-                    <span>מוגבל ל-{mission.visibility_soldier_ids.length} אנשים</span>
+                    <span>מוגבל לצפייה</span>
                   </div>
                 )}
 
@@ -119,6 +177,7 @@ export default function MissionsTab() {
                       <tr>
                         <th style={{ background: 'none', padding: '0 8px', fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'right' }}>מוצר</th>
                         <th style={{ background: 'none', padding: '0 8px', fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'right' }}>סטטוס</th>
+                        <th style={{ background: 'none', padding: '0 8px', width: 40 }}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -129,14 +188,33 @@ export default function MissionsTab() {
                             <Select 
                               value={item.status} 
                               onChange={(e) => updateItemStatus(mission.id, item.id, e.target.value)}
-                              style={{ marginBottom: 0, padding: '4px 8px', fontSize: '0.8rem' }}
+                              style={{ marginBottom: 0, padding: '4px 8px', fontSize: '0.8rem', height: 32 }}
                               options={mission.status_options.map(opt => ({ value: opt, label: opt }))}
                             />
+                          </td>
+                          <td style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>
+                            <button onClick={() => deleteItem(mission.id, item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', opacity: 0.6 }}>
+                              <Trash size={14} />
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Add Item Row */}
+                <div style={{ display: 'flex', gap: 8, marginTop: 12, borderTop: '1px dashed var(--border)', paddingTop: 16 }}>
+                  <Input 
+                    value={newItemName[mission.id] || ''}
+                    onChange={e => setNewItemName({ ...newItemName, [mission.id]: e.target.value })}
+                    placeholder="הוסף מוצר חדש..."
+                    style={{ marginBottom: 0, height: 36, fontSize: '0.85rem' }}
+                    onKeyDown={e => e.key === 'Enter' && addItem(mission.id)}
+                  />
+                  <Button variant="secondary" onClick={() => addItem(mission.id)} style={{ height: 36, padding: '0 12px' }}>
+                    <Plus size={16} />
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -147,7 +225,7 @@ export default function MissionsTab() {
       {showCreateModal && (
         <CreateProductListModal 
           onClose={() => setShowCreateModal(false)} 
-          onSuccess={() => { setShowCreateModal(false); fetchMissions(); }}
+          onSuccess={() => { setShowCreateModal(false); fetchMissions(currentUser?.id); }}
           soldiers={soldiers}
           currentUser={currentUser}
         />
